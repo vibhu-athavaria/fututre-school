@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useAuth } from '../contexts/AuthContext';
 import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -15,6 +16,7 @@ interface Child {
 }
 
 export const Dashboard: React.FC = () => {
+  const { user } = useAuth()
   const [children, setChildren] = useState<Child[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -33,8 +35,15 @@ export const Dashboard: React.FC = () => {
             Authorization: `Bearer ${token}`,
           },
         })
+        // Map API response to Child interface
+        const mappedChildren = res.data.map((child: any) => ({
+          id: child.id.toString(),
+          name: child.user?.full_name || child.user?.username || "Unknown",
+          age: child.age,
+          grade: child.grade_level || "N/A",
+        }))
 
-        setChildren(res.data)
+        setChildren(mappedChildren)
       } catch (err) {
         console.error("Failed to fetch children:", err)
       } finally {
@@ -63,11 +72,11 @@ export const Dashboard: React.FC = () => {
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="text-left mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              My Children
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              Welcome back, {user?.full_name || "Parent"}!
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Check in on their progress and manage their accounts.
+              View your children’s progress and manage their accounts.
             </p>
           </div>
           <div className="flex items-right justify-between">

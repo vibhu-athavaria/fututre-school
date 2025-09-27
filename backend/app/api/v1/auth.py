@@ -5,7 +5,6 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.core.config import settings
 from app.crud.user import authenticate_user, create_user, get_user_by_email, get_user_by_username
-from app.crud.student import create_student_profile   # new helper
 from app.schemas.auth import Token, UserCreate, UserResponse, UserLogin
 from app.models.user import UserRole
 
@@ -30,22 +29,10 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Username already taken")
 
     elif user.role == UserRole.STUDENT.value:
-        # Username is required for students
-        if not user.username:
-            raise HTTPException(status_code=400, detail="Username is required for students")
-        if get_user_by_username(db, username=user.username):
-            raise HTTPException(status_code=400, detail="Username already taken")
-
-        # Email is optional → only check if provided
-        if user.email and get_user_by_email(db, email=user.email):
-            raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Wrong endpoint for student signup")
 
     # Create the user
     db_user = create_user(db=db, user=user)
-
-    # If role=student, create profile
-    if user.role == UserRole.STUDENT.value:
-        create_student_profile(db=db, user_id=db_user.id, profile_data=user.student_profile)
 
     return db_user
 

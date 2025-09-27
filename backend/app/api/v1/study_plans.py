@@ -12,7 +12,7 @@ from app.crud.student import get_student_by_parent_and_id, get_student
 from app.schemas.lesson import StudyPlan, StudyPlanCreate, StudyPlanUpdate
 from app.models.user import User as UserModel
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/study-plans", tags=["study-plans"])
 
 @router.get("/student/{student_id}", response_model=List[StudyPlan])
 def get_student_study_plans(

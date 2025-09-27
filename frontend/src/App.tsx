@@ -15,6 +15,7 @@ import { AITutor } from './pages/AITutor';
 import { Lesson } from './pages/Lesson';
 import { StudyPlan } from './pages/StudyPlan';
 import { StudentProgress } from './pages/StudentProgress';
+import  TakeAssessment  from './pages/TakeAssessment';
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
@@ -60,6 +61,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 {user?.role === 'student' ? <ChildDashboard /> : <Navigate to="/dashboard" />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/take-assessment"
+            element={
+              <ProtectedRoute>
+                {user?.role === 'student' ? <TakeAssessment /> : <Navigate to="/dashboard" />}
               </ProtectedRoute>
             }
           />

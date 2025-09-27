@@ -5,13 +5,14 @@ import { useForm } from 'react-hook-form';
 
 
 interface SignUpForm {
+  full_name: string;
   email: string;
   password: string;
   confirmPassword: string;
 }
 
 export const SignUp: React.FC = () => {
-  const { signUp, loading } = useAuth();
+  const { signUpParent, loading } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const { register, handleSubmit, watch, formState: { errors } } = useForm<SignUpForm>();
@@ -21,7 +22,7 @@ export const SignUp: React.FC = () => {
   const onSubmit = async (data: SignUpForm) => {
     setError('');
     try {
-      await signUp(data.email, data.password);
+      await signUpParent(data.email, data.password, data.full_name);
       navigate('/dashboard');
     } catch (err) {
       setError('Failed to create account. Please try again.');
@@ -48,6 +49,23 @@ export const SignUp: React.FC = () => {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div>
+              <input
+                {...register('full_name', {
+                  required: 'Full name is required',
+                  minLength: {
+                    value: 2,
+                    message: 'Full name must be at least 2 characters'
+                  }
+                })}
+                type="text"
+                placeholder="Full Name"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+              {errors.full_name && (
+                <p className="mt-1 text-sm text-red-600">{errors.full_name.message}</p>
+              )}
+            </div>
             <div>
               <input
                 {...register('email', {

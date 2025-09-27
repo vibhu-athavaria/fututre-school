@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.user import User, Student
-from app.schemas.user import UserCreate, UserUpdate, StudentCreate, StudentUpdate
+from app.models.user import User, StudentProfile, UserRole
+from app.schemas.user import UserCreate, UserUpdate, StudentProfileCreate, StudentProfileUpdate
 from app.core.security import get_password_hash, verify_password
 from typing import Optional
 
@@ -27,7 +27,7 @@ def create_user(db: Session, user: UserCreate) -> User:
     db.refresh(db_user)
     return db_user
 
-def authenticate_user(db: Session, identifier: str, password: str): -> Optional[User]:
+def authenticate_user(db: Session, identifier: str, password: str) -> Optional[User]:
     # Identifier can be email or username
     user = None
     if "@" in identifier:  # crude check: treat as email
@@ -54,20 +54,36 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> Optional[
     db.refresh(db_user)
     return db_user
 
-def create_student(db: Session, student: StudentCreate, parent_id: int) -> Student:
+def create_student(db: Session, student: StudentProfileCreate, parent_id: int) -> StudentProfile:
     hashed_password = get_password_hash(student.password)
-    db_student = Student(
-        name=student.name,
+    # Step 1: Create a User entry for the student
+    student_user = User(
+        role=UserRole.STUDENT,
+        full_name=student.name,
+        username=student.username,   # required for student
+        email=student.email,         # optional
+        hashed_password=hashed_password  # should be hashed before
+    )
+    db.add(student_user)
+    db.commit()
+    db.refresh(student_user)
+
+    # Step 2: Create StudentProfile linked to that user and parent
+    db_student_profile = StudentProfile(
+        user_id=student_user.id,
+        parent_id=parent_id,
         age=student.age,
         grade_level=student.grade_level,
-        parent_id=parent_id,
-        username=student.username,
-        password=hashed_password
+        math_checkpoint=student.checkpoints.get("math") if student.checkpoints else None,
+        science_checkpoint=student.checkpoints.get("science") if student.checkpoints else None,
+        english_checkpoint=student.checkpoints.get("english") if student.checkpoints else None,
     )
-    db.add(db_student)
+    db.add(db_student_profile)
     db.commit()
-    db.refresh(db_student)
-    return db_student
+    db.refresh(db_student_profile)
+
+    return db_student_profile
+
 
 def get_students_by_parent(db: Session, parent_id: int):
-    return db.query(Student).filter(Student.parent_id == parent_id).all()
+    return db.query(StudentProfile).filter(StudentProfile.parent_id == parent_id).all()

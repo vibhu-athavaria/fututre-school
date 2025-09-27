@@ -41,24 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ---------- SIGNUP (Parents only for now) ----------
   // ---------- SIGNUP (Parents only for now) ----------
-  const signUpParent = async (email: string, password: string) => {
+  const signUpParent = async (email: string, password: string, full_name: string) => {
     setLoading(true);
     try {
-      // 1. Check if email already exists
-      const check = await axios.get(`/api/v1/users/check-email`, {
-        params: { email }
-      });
 
-      if (check.data.exists) {
-        throw new Error('This email is already registered. Please log in instead.');
-      }
-
-      // 2. Proceed with signup if not exists
       const response = await axios.post('/api/v1/auth/signup', {
         email: email,
         username: email,      // using email as username for parents
         password: password,
-        full_name: email,     // you might replace this with an actual form field
+        full_name: full_name,
         role: 'parent'
       });
 

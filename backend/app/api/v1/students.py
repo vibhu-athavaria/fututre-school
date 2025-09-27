@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_active_user
 from app.crud.student import get_student_by_parent_and_id, update_student, delete_student
-from app.schemas.user import Student, StudentUpdate
-from app.models.user import User as UserModel
+from app.schemas.user import User, StudentProfileCreate, StudentProfileUpdate, StudentProfileResponse
+from app.models.user import User as UserModel, StudentProfile
 
 router = APIRouter()
 
-@router.get("/{student_id}", response_model=Student)
+@router.get("/{student_id}", response_model=StudentProfileResponse)
 def read_student(
     student_id: int,
     db: Session = Depends(get_db),
@@ -25,15 +25,15 @@ def read_student(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
         )
-    
+
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return student
 
-@router.put("/{student_id}", response_model=Student)
+@router.put("/{student_id}", response_model=StudentProfileResponse)
 def update_student_profile(
     student_id: int,
-    student_update: StudentUpdate,
+    student_update: StudentProfileUpdate,
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user)
 ):
@@ -51,7 +51,7 @@ def update_student_profile(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
         )
-    
+
     updated_student = update_student(db, student_id, student_update)
     if not updated_student:
         raise HTTPException(status_code=404, detail="Student not found")
@@ -77,7 +77,7 @@ def delete_student_profile(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
         )
-    
+
     success = delete_student(db, student_id)
     if not success:
         raise HTTPException(status_code=404, detail="Student not found")

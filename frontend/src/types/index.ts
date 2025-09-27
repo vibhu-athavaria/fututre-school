@@ -5,12 +5,17 @@ export interface User {
 }
 
 export interface Child {
-  id: string;
-  parent_id: string;
-  full_name: string;
-  age: number;
-  grade: string;
-  created_at: string;
+  id: string
+  parent_id: string
+  age: number
+  grade: string
+  user: {
+    full_name: string
+    username: string
+    email: string | null
+    role: string
+    has_completed_assessment: boolean
+  }
 }
 
 export interface Lesson {
@@ -33,7 +38,7 @@ export interface ChatMessage {
 
 export interface AuthContextType {
   user: User | null;
-  signUpParent: (email: string, password: string) => Promise<void>;
+  signUpParent: (email: string, password: string, full_name: string) => Promise<void>;
   signInParent: (email: string, password: string) => Promise<void>;
   signInStudent: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;

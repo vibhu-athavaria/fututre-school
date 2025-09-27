@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_active_user, get_current_admin_user
 from app.crud.user import get_user, update_user, get_students_by_parent, create_student
-from app.schemas.user import User, UserUpdate, Student, StudentCreate, StudentUpdate
+from app.schemas.user import User, UserUpdate, StudentProfileCreate, StudentProfileResponse
 from app.models.user import User as UserModel
 from app.crud.user import get_user as get_user_crud
 
@@ -27,7 +27,7 @@ def update_user_me(
         raise HTTPException(status_code=404, detail="User not found")
     return updated_user
 
-@router.get("/me/students", response_model=List[Student])
+@router.get("/me/students", response_model=List[StudentProfileResponse])
 def read_my_students(
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user)
@@ -40,9 +40,9 @@ def read_my_students(
         )
     return get_students_by_parent(db, current_user.id)
 
-@router.post("/me/students", response_model=Student)
+@router.post("/me/students", response_model=StudentProfileResponse)
 def create_student_for_me(
-    student: StudentCreate,
+    student: StudentProfileCreate,
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user)
 ):

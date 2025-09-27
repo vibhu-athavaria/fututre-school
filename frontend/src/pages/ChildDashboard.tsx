@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { BookOpen, Beaker, Scroll, Edit3, Paintbrush, Music } from 'lucide-react';
-import { Child, Lesson } from '../types';
+"use client"
+
+import React, { useEffect, useState } from "react"
+import { BookOpen, Beaker, Scroll, Edit3, Paintbrush, Music } from "lucide-react"
+import { Child, Lesson } from "../types"
 
 const subjectIcons = {
   Math: BookOpen,
@@ -9,129 +11,74 @@ const subjectIcons = {
   English: Edit3,
   Art: Paintbrush,
   Music: Music,
-};
+}
 
 export const ChildDashboard: React.FC = () => {
-  const [child, setChild] = useState<Child | null>(null);
-  const [todaysTasks, setTodaysTasks] = useState<Lesson[]>([]);
-  const [upcomingLessons, setUpcomingLessons] = useState<Lesson[]>([]);
+  const [child, setChild] = useState<Child | null>(null)
+  const [todaysTasks, setTodaysTasks] = useState<Lesson[]>([])
+  const [upcomingLessons, setUpcomingLessons] = useState<Lesson[]>([])
 
   useEffect(() => {
-    // Load child data
-    const currentChild = localStorage.getItem('currentChild');
+    // Load child data from localStorage
+    const currentChild = localStorage.getItem("currentChild")
     if (currentChild) {
-      try {
-        setChild(JSON.parse(currentChild));
-      } catch (error) {
-        console.error('Error parsing child data:', error);
-        // Create a default child if none exists
-        const defaultChild: Child = {
-          id: 'default-child',
-          parent_id: 'current-user',
-          full_name: 'Student',
-          age: 12,
-          grade: '7th Grade',
-          created_at: new Date().toISOString(),
-        };
-        setChild(defaultChild);
-        localStorage.setItem('currentChild', JSON.stringify(defaultChild));
-      }
-    } else {
-      // Create a default child if none exists
-      const defaultChild: Child = {
-        id: 'default-child',
-        parent_id: 'current-user',
-        full_name: 'Student',
-        age: 12,
-        grade: '7th Grade',
-        created_at: new Date().toISOString(),
-      };
-      setChild(defaultChild);
-      localStorage.setItem('currentChild', JSON.stringify(defaultChild));
+      setChild(JSON.parse(currentChild))
     }
 
-    // Mock data for lessons
+    // Mock data for lessons (after assessment)
     setTodaysTasks([
-      {
-        id: '1',
-        title: 'Algebra Basics',
-        subject: 'Math',
-        icon: 'BookOpen',
-        type: 'today',
-        child_id: '1'
-      },
-      {
-        id: '2',
-        title: 'The Solar System',
-        subject: 'Science',
-        icon: 'Beaker',
-        type: 'today',
-        child_id: '1'
-      },
-      {
-        id: '3',
-        title: 'Ancient Civilizations',
-        subject: 'History',
-        icon: 'Scroll',
-        type: 'today',
-        child_id: '1'
-      }
-    ]);
+      { id: "1", title: "Algebra Basics", subject: "Math", icon: "BookOpen", type: "today", child_id: "1" },
+      { id: "2", title: "The Solar System", subject: "Science", icon: "Beaker", type: "today", child_id: "1" },
+      { id: "3", title: "Ancient Civilizations", subject: "History", icon: "Scroll", type: "today", child_id: "1" },
+    ])
 
     setUpcomingLessons([
-      {
-        id: '4',
-        title: 'Creative Writing',
-        subject: 'English',
-        icon: 'Edit3',
-        type: 'upcoming',
-        schedule: 'Tomorrow',
-        child_id: '1'
-      },
-      {
-        id: '5',
-        title: 'Drawing Fundamentals',
-        subject: 'Art',
-        icon: 'Paintbrush',
-        type: 'upcoming',
-        schedule: 'In 2 days',
-        child_id: '1'
-      },
-      {
-        id: '6',
-        title: 'Music Theory',
-        subject: 'Music',
-        icon: 'Music',
-        type: 'upcoming',
-        schedule: 'In 3 days',
-        child_id: '1'
-      }
-    ]);
-  }, []);
+      { id: "4", title: "Creative Writing", subject: "English", icon: "Edit3", type: "upcoming", schedule: "Tomorrow", child_id: "1" },
+      { id: "5", title: "Drawing Fundamentals", subject: "Art", icon: "Paintbrush", type: "upcoming", schedule: "In 2 days", child_id: "1" },
+      { id: "6", title: "Music Theory", subject: "Music", icon: "Music", type: "upcoming", schedule: "In 3 days", child_id: "1" },
+    ])
+  }, [])
 
   const handleStartLesson = (lessonId: string) => {
-    // Navigate to lesson page
-    window.location.href = `/lesson/${lessonId}`;
-  };
-
-  if (!child) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    window.location.href = `/lesson/${lessonId}`
   }
 
+  const handleTakeAssessment = () => {
+    window.location.href = "/take-assessment"
+  }
+
+  if (!child) return null // nothing renders until child is loaded
+
+  // Show assessment first if not completed
+  if (!child.user.has_completed_assessment) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Welcome, {child.user?.full_name}!
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Please take the assessment test to generate your personalized learning plan.
+          </p>
+          <button
+            onClick={handleTakeAssessment}
+            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-all duration-200"
+          >
+            Take Assessment
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Child dashboard after assessment
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {child.full_name}!
+            Welcome back, {child.user?.full_name}!
           </h1>
           <p className="text-gray-600 flex items-center">
             Let's continue your learning journey and crush those goals! ✨
@@ -157,7 +104,7 @@ export const ChildDashboard: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Today's Tasks</h2>
           <div className="space-y-4">
             {todaysTasks.map((task) => {
-              const IconComponent = subjectIcons[task.subject as keyof typeof subjectIcons] || BookOpen;
+              const IconComponent = subjectIcons[task.subject as keyof typeof subjectIcons] || BookOpen
               return (
                 <div
                   key={task.id}
@@ -168,9 +115,7 @@ export const ChildDashboard: React.FC = () => {
                       <IconComponent className="w-8 h-8 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {task.title}
-                      </h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{task.title}</h3>
                       <p className="text-gray-600">{task.subject}</p>
                     </div>
                   </div>
@@ -181,7 +126,7 @@ export const ChildDashboard: React.FC = () => {
                     Start Lesson
                   </button>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
@@ -191,7 +136,7 @@ export const ChildDashboard: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Lessons</h2>
           <div className="space-y-4">
             {upcomingLessons.map((lesson) => {
-              const IconComponent = subjectIcons[lesson.subject as keyof typeof subjectIcons] || BookOpen;
+              const IconComponent = subjectIcons[lesson.subject as keyof typeof subjectIcons] || BookOpen
               return (
                 <div
                   key={lesson.id}
@@ -202,9 +147,7 @@ export const ChildDashboard: React.FC = () => {
                       <IconComponent className="w-8 h-8 text-gray-600" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {lesson.title}
-                      </h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{lesson.title}</h3>
                       <p className="text-gray-600">{lesson.subject}</p>
                     </div>
                   </div>
@@ -212,11 +155,11 @@ export const ChildDashboard: React.FC = () => {
                     <p className="text-sm font-medium text-gray-900">{lesson.schedule}</p>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

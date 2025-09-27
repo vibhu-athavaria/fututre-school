@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, validator
-from typing import Optional
+from typing import Dict, Optional
 from datetime import datetime
 from app.models.user import UserRole
 
@@ -55,26 +55,42 @@ class User(UserBase):
 # STUDENT PROFILE SCHEMAS
 # -------------------
 class StudentProfileCreate(BaseModel):
-    age: Optional[int]
-    grade_level: Optional[str]
-    checkpoints: Optional[dict] = None   # JSON field
+    # User fields
+    name: str                              # full name
+    username: str                          # required for students
+    email: Optional[EmailStr] = None       # optional
+    password: str                          # plain text (hash before save)
+
+    # Profile fields
+    age: Optional[int] = None
+    grade_level: Optional[str] = None
+    checkpoints: Optional[Dict[str, str]] = None   # {"math": "A", "science": "B", ...}
+
 
 
 class StudentProfileUpdate(BaseModel):
+    # User fields
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None   # if updating, re-hash before save
+
+    # Profile fields
     age: Optional[int] = None
     grade_level: Optional[str] = None
-    checkpoints: Optional[dict] = None
+    checkpoints: Optional[Dict[str, str]] = None
 
 
 class StudentProfileResponse(BaseModel):
+    id: int
+    parent_id: int
     age: Optional[int] = None
     grade_level: Optional[str] = None
-    checkpoints: Optional[dict] = None
+    checkpoints: Optional[Dict[str, str]] = None
+
+    user: UserBase  # 👈 include relationship instead of flattening
 
     class Config:
         from_attributes = True
-
-
 # -------------------
 # LOGIN + TOKEN
 # -------------------

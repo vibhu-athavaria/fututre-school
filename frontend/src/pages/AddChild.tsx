@@ -33,16 +33,6 @@ export const AddChild: React.FC = () => {
   const onSubmit = async (data: AddChildForm) => {
     setLoading(true);
     try {
-      // 1. Check if username already exists
-      const check = await axios.get('/api/v1/users/check-username', {
-        params: { username: data.username }
-      });
-
-      if (check.data.exists) {
-        alert('This username is already taken. Please choose another one.');
-        setLoading(false);
-        return;
-      }
 
       // 2. Proceed with creating child if username available
       const response = await axios.post('/api/v1/users/me/students', {
