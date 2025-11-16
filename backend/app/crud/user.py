@@ -84,6 +84,18 @@ def create_student(db: Session, student: StudentProfileCreate, parent_id: int) -
 
     return db_student_profile
 
+def update_student(db: Session, student_id: int, student_update: StudentProfileUpdate) -> Optional[StudentProfile]:
+    db_student = db.query(StudentProfile).filter(StudentProfile.id == student_id).first()
+    if not db_student:
+        return None
+
+    update_data = student_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_student, field, value)
+
+    db.commit()
+    db.refresh(db_student)
+    return db_student
 
 def get_students_by_parent(db: Session, parent_id: int):
     return db.query(StudentProfile).filter(StudentProfile.parent_id == parent_id).all()

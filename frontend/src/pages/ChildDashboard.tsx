@@ -39,17 +39,43 @@ export const ChildDashboard: React.FC = () => {
   })
 
   useEffect(() => {
-    const storedChild = localStorage.getItem("currentChild")
-    if (storedChild) {
-      const parsed = JSON.parse(storedChild)
-      setChild(parsed)
+    const token = localStorage.getItem("access_token")
+    const localUser = localStorage.getItem("user")
+
+    // No token → force login
+    if (!token || !localUser) {
+      console.error("Missing token or user. Redirecting.")
+      window.location.href = "/student-login"
+      return
+    }
+
+    // Parse user and check role
+    let parsedUser: any
+    try {
+      parsedUser = JSON.parse(localUser)
+
+      if (!parsedUser?.role || parsedUser.role.toLowerCase() !== "student") {
+        console.error("User is not a student")
+        window.location.href = "/student-login"
+        return
+      }
+    } catch (err) {
+      console.error("Invalid user JSON")
+      window.location.href = "/student-login"
+      return
+    }
+
+    const currentChild = parsedUser.student_profile
+
+    if (currentChild) {
+      setChild(currentChild)
 
       // mock: assume the backend will return which subjects have assessments done
       setCompletedAssessments({
-        Math: parsed.user.assessments?.Math || false,
-        Science: parsed.user.assessments?.Science || false,
-        English: parsed.user.assessments?.English || false,
-        Humanities: parsed.user.assessments?.Humanities || false,
+        Math: currentChild.user.assessments?.Math || false,
+        Science: currentChild.user.assessments?.Science || false,
+        English: currentChild.user.assessments?.English || false,
+        Humanities: currentChild.user.assessments?.Humanities || false,
       })
     }
 
@@ -75,7 +101,7 @@ export const ChildDashboard: React.FC = () => {
   }, [])
 
   const handleStartAssessment = (subject: Subject) => {
-    window.location.href = `/take-assessment?subject=${subject}`
+    window.location.href = `/child-dashboard/assessment?subject=${subject}`
   }
 
   if (!child) return null
@@ -86,7 +112,7 @@ export const ChildDashboard: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {child.user?.full_name}!
+            Welcome back, {child.user?.full_name}! (Grade {child.grade_level})
           </h1>
           <p className="text-gray-600">
             Choose a subject to continue your learning journey.

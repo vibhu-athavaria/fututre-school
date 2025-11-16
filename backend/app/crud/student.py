@@ -24,6 +24,8 @@ def update_student(db: Session, student_id: int, updates: StudentProfileUpdate) 
         return None
 
     # Update User fields
+    if updates.full_name is not None:
+        db_user.full_name = updates.full_name
     if updates.username is not None:
         db_user.username = updates.username
     if updates.email is not None:

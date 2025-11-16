@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTimeout(checkSession, 100);
   }, []);
 
-  // ---------- SIGNUP (Parents only for now) ----------
+
   // ---------- SIGNUP (Parents only for now) ----------
   const signUpParent = async (email: string, password: string, full_name: string) => {
     setLoading(true);

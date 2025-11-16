@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_active_user, get_current_admin_user
-from app.crud.user import get_user, update_user, get_students_by_parent, create_student
-from app.schemas.user import User, UserUpdate, StudentProfileCreate, StudentProfileResponse
+from app.crud.user import get_user, update_user, get_students_by_parent, create_student, update_student
+from app.schemas.user import User, UserUpdate, StudentProfileCreate, StudentProfileResponse, StudentProfileUpdate
 from app.models.user import User as UserModel
 from app.crud.user import get_user as get_user_crud
 
@@ -53,6 +53,21 @@ def create_student_for_me(
             detail="Only parents can create student profiles"
         )
     return create_student(db, student, current_user.id)
+
+@router.put("/me/students/{student_id}", response_model=StudentProfileResponse)
+def update_student_for_me(
+    student_id: int,
+    student: StudentProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    """Update a student profile (for parents)"""
+    if current_user.role != "parent":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only parents can update student profiles"
+        )
+    return update_student(db, student_id, student)
 
 @router.get("/{user_id}", response_model=User)
 def read_user(

@@ -21,7 +21,8 @@ from app.constants import (
     ASSESSMENT_STATUS_PROGRESS,
     ASSESSMENT_STATUS_COMPLETED,
     ASSESSMENT_TYPES,
-    ASSESSMENT_SUBJECTS
+    ASSESSMENT_SUBJECTS,
+    TOTAL_QUESTIONS_PER_ASSESSMENT
 )
 
 
@@ -47,7 +48,8 @@ def create_assessment(payload: schemas.AssessmentCreate, db: Session = Depends(g
         .filter(
             models.Assessment.student_id == payload.student_id,
             models.Assessment.status == ASSESSMENT_STATUS_PROGRESS,
-            models.Assessment.subject == payload.subject
+            models.Assessment.subject == payload.subject,
+            models.Assessment.grade_level == student.grade_level
         )
         .order_by(models.Assessment.created_at.desc())
         .first()
@@ -62,7 +64,7 @@ def create_assessment(payload: schemas.AssessmentCreate, db: Session = Depends(g
         subject=payload.subject,
         grade_level=grade_level,
         assessment_type=ASSESSMENT_TYPES[0],  # default to "diagnostic"
-        difficulty_level="medium",
+        # difficulty_level="medium",
         status=ASSESSMENT_STATUS_PROGRESS,
         total_questions=0,
         questions_answered=0,
@@ -160,7 +162,7 @@ async def check_answer_and_next(assessment_id: int, question_id: int, payload: s
     assessment.difficulty_level = difficulty_label_from_value(new_val)
 
     # Possibly mark assessment complete
-    if assessment.questions_answered >= settings.MAX_QUESTIONS_PER_ASSESSMENT:
+    if assessment.questions_answered >= TOTAL_QUESTIONS_PER_ASSESSMENT:
         assessment.status = ASSESSMENT_STATUS_COMPLETED
         assessment.completed_at = datetime.now(timezone.utc)
         # compute overall score
@@ -169,7 +171,14 @@ async def check_answer_and_next(assessment_id: int, question_id: int, payload: s
         db.add(assessment)
         db.commit()
         # return final result with no next question
-        return {"question_id": question.id, "is_correct": question.is_correct, "score": question.score, "feedback": question.ai_feedback, "next_question": None}
+        return {
+            "question_id": question.id,
+            "is_correct": question.is_correct,
+            "score": question.score,
+            "feedback": question.ai_feedback,
+            "next_question": None,
+            "status": assessment.status
+        }
 
     # create next question
     next_q = await create_question(db, assessment)
@@ -185,7 +194,8 @@ async def check_answer_and_next(assessment_id: int, question_id: int, payload: s
         "is_correct": is_correct,
         "score": question.score,
         "feedback": question.ai_feedback,
-        "next_question": next_q
+        "next_question": next_q,
+        "status": assessment.status
     }
 
 
@@ -197,7 +207,7 @@ def get_assessment(assessment_id: int, db: Session = Depends(get_db)):
     return assessment
 
 
-@router.post("/{assessment_id}/complete", response_model=schemas.AssessmentOut)
+@router.post("/{assessment_id}/completed", response_model=schemas.AssessmentOut)
 def complete_assessment(assessment_id: int, db: Session = Depends(get_db)):
     assessment = db.query(models.Assessment).filter(models.Assessment.id == assessment_id).first()
     if not assessment:
@@ -210,7 +220,7 @@ def complete_assessment(assessment_id: int, db: Session = Depends(get_db)):
     mastery_map = {skp.knowledge_area.topic: skp.mastery_level for skp in skps}
     plan_payload = llm.generate_study_plan(mastery_map, assessment.subject, assessment.grade_level)
     assessment.recommendations = plan_payload
-    assessment.status = ASSESSMENT_STATUS_COMPLETED
+    # assessment.status = ASSESSMENT_STATUS_COMPLETED
     assessment.completed_at = datetime.now(timezone.utc)
     db.add(assessment)
     db.commit()

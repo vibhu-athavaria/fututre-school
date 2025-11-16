@@ -4,6 +4,7 @@ import json
 import re
 import random
 import logging
+import unicodedata
 from typing import Dict, Any, Optional
 from app.core.config import settings
 
@@ -21,26 +22,33 @@ class LLMService:
 
     def _safe_parse_gemini_response(self, raw_text: str):
         """
-        Cleans and safely parses Gemini responses that are meant to be JSON.
-        Returns a Python dict if successful, or None otherwise.
+        Cleans noisy Gemini JSON output and safely parses it into a Python dict.
+        Returns None if parsing fails after cleanup.
         """
         try:
-            # Trim code block markers or markdown formatting
-            cleaned = raw_text.strip().strip("```").strip("json").strip()
+            # 1️⃣ Remove Markdown formatting (```json ... ```)
+            cleaned = re.sub(r"^```(?:json)?|```$", "", raw_text.strip(), flags=re.MULTILINE).strip()
 
-            # Try direct JSON parsing
+            # 2️⃣ Normalize Unicode (remove invisible / weird chars)
+            cleaned = unicodedata.normalize("NFKD", cleaned)
+            cleaned = re.sub(r"[^\x00-\x7F]+", " ", cleaned)  # keep ASCII only
+
+            # 3️⃣ Remove stray characters after closing brackets
+            cleaned = re.sub(r']\s*[^,\]}]*', ']', cleaned)
+            cleaned = re.sub(r'}\s*[^}]*$', '}', cleaned)
+
+            # 4️⃣ Fix trailing commas
+            cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
+
+            # 5️⃣ Parse JSON
             return json.loads(cleaned)
-        except json.JSONDecodeError:
-            # Try to repair common issues (like stray commas or garbage text)
-            try:
-                # Remove junk after the final closing brace
-                cleaned = re.sub(r'}[^}]*$', '}', cleaned)
-                return json.loads(cleaned)
-            except Exception as e:
-                print("⚠️ Could not parse Gemini JSON directly. Raw text:")
-                print(raw_text)
-                print(f"Parser error: {e}")
-                return None
+
+        except Exception as e:
+            print("⚠️ Could not parse Gemini JSON directly. Raw text:")
+            print(raw_text)
+            print(f"Parser error: {e}")
+            return None
+
 
     # ---------------------
     # Question generation
@@ -66,36 +74,46 @@ class LLMService:
                 "difficulty_level": difficulty_level,
             }
 
-        prompt = {
-            "prompt_template": "Generate 1 {subject} question in JSON format for Grades {grade_level} with difficulty '{difficulty_level}'. Output ONLY valid JSON matching schema: {\"question_text\":\"\", \"question_type\":\"\", \"options\":[], \"correct_answer\":\"\", \"subject\":\"\", \"sub_topic\":\"\", \"difficulty_level\":\"\", \"learning_objectives\":\"\", \"description\":\"\", \"prerequisites\":\"\"}",
-            "variables": {
-                "subject": subject,
-                "grade_level": grade_level,
-                "difficulty_level": difficulty_level
-            },
-            "generation_constraints": {
-                "output_format": "JSON",
-                "must_match_schema": {
-                    "question_text": "string",
-                    "question_type": "string",
-                    "options": "array",
-                    "correct_answer": "string",
-                    "subject": "string",
-                    "sub_topic": "string",
-                    "difficulty_level": "string",
-                    "learning_objectives": "array",
-                    "description": "string",
-                    "prerequisites": "array"
-                }
-            },
-            "validation_filters": [
-                "Multiple Choice (MCQ) distinct options: Ensure all values in the `options` array for a multiple-choice question are unique.",
-                "True/False (T/F) format: Ensure T/F questions begin with a complete, verifiable, factual statement.",
-                "Short Answer format: Ensure short answer questions require a single-line, real-world fact as the answer (non-open-ended, not an essay)."
-            ]
-        }
+        prompt = f"""
+            Generate EXACTLY 1 {subject} assessment question for Grade {grade_level} with difficulty '{difficulty_level}'.
+            Follow ALL rules strictly.
+
+            1. The question MUST be appropriate for Grade {grade_level} in terms of vocabulary, complexity, and domain knowledge.
+
+            2. The subject MUST be strictly followed: {subject}.
+            No cross-subject content.
+
+            3. The difficulty level MUST reflect '{difficulty_level}'.
+
+            4. The question type MUST be one of: 'MCQ' and 'True/False'.
+
+            5. If question_type = 'MCQ':
+            - Provide 4 unique answer options.
+            - correct_answer MUST match exactly one option.
+
+            6. If question_type = 'True/False':
+            - No 'options'.
+            - correct_answer MUST be 'True' or 'False'.
+            7. The question MUST be relevant to the topic: {topic or "General"}.
+
+            8. Output STRICT JSON ONLY:
+            {{
+            "question_text": "",
+            "question_type": "",
+            "options": [],
+            "correct_answer": "",
+            "subject": "",
+            "sub_topic": "",
+            "difficulty_level": "",
+            "learning_objectives": [],
+            "description": "",
+            "prerequisites": []
+            }}
+            """
 
         logger.debug("LLM Question Prompt: %s", prompt)
+        print("LLM Question Prompt: ", prompt)
+
         if self.provider == "openai":
             try:
                 from openai import OpenAI

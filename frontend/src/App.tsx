@@ -16,6 +16,7 @@ import { Lesson } from './pages/Lesson';
 import { StudyPlan } from './pages/StudyPlan';
 import { StudentProgress } from './pages/StudentProgress';
 import AssessmentPage from './pages/AssessmentPage';
+import { EditChild } from './pages/EditChild';
 
 
 const AppContent: React.FC = () => {
@@ -48,6 +49,14 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
+            path="/edit-child/:id"
+            element={
+              <ProtectedRoute>
+                {user?.role === 'parent' ? <EditChild /> : <Navigate to="/child-dashboard" />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
@@ -66,7 +75,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/take-assessment"
+            path="/child-dashboard/assessment"
             element={
               <ProtectedRoute>
                 {user?.role === 'student' ? <AssessmentPage /> : <Navigate to="/dashboard" />}

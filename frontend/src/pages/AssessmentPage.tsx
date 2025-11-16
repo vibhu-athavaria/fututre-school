@@ -58,20 +58,36 @@ const AssessmentPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("access_token");
-      const child = JSON.parse(localStorage.getItem("currentChild") || "{}");
+      const token = localStorage.getItem("access_token")
+      const localUser = localStorage.getItem("user")
 
-      if (!token || !child?.id) {
-        console.error("Missing token or child info");
-        navigate("/parent-login");
-        return;
+      // No token or localUser → force login
+      if (!token || !localUser) {
+        console.error("Missing token or user. Redirecting.")
+        window.location.href = "/student-login"
+        return
+      }
+      // Parse user and check role
+      let parsedUser: any
+      try {
+        parsedUser = JSON.parse(localUser)
+
+        if (!parsedUser?.role || parsedUser.role.toLowerCase() !== "student") {
+          console.error("User is not a student")
+          window.location.href = "/student-login"
+          return
+        }
+      } catch (err) {
+        console.error("Invalid user JSON")
+        window.location.href = "/student-login"
+        return
       }
 
-      // ✅ subject is now dynamic
+      //  create or get assessment
       const resp = await axios.post(
         "/api/v1/assessments/",
         {
-          student_id: child.id,
+          student_id: parsedUser.student_profile.id,
           subject: subject,
         },
         {
@@ -138,9 +154,9 @@ const AssessmentPage: React.FC = () => {
       if (body.next_question) {
         setQuestion(stripServerFields(body.next_question));
         setAnswer("");
-      } else {
+      } else if (body.status === "completed") {
         // Finished — show report
-        const r = await axios.get(`/api/v1/assessments/${assessment.id}`, {
+        const r = await axios.get(`/api/v1/assessments/${assessment.id}/completed`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setReport(r.data);

@@ -70,6 +70,7 @@ class StudentProfileCreate(BaseModel):
 
 class StudentProfileUpdate(BaseModel):
     # User fields
+    full_name: Optional[str] = None
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = None   # if updating, re-hash before save

@@ -11,7 +11,7 @@ class Assessment(Base):
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("student_profiles.id"), nullable=False)
     subject = Column(String, nullable=False)  # Math, Science, English, History
-    grade_level = Column(String, nullable=False)
+    grade_level = Column(Integer, nullable=False)
     assessment_type = Column(String, nullable=False)  # "diagnostic", "progress", "final"
     difficulty_level = Column(String, default="medium")  # "easy", "medium", "hard"
     status = Column(String, default="started")  # "started", "in_progress", "completed", "abandoned"

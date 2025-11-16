@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from "../contexts/AuthContext"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -12,7 +12,7 @@ interface Child {
   id: string
   name: string
   age: number
-  grade: number
+  grade: number | string
 }
 
 export const Dashboard: React.FC = () => {
@@ -20,30 +20,62 @@ export const Dashboard: React.FC = () => {
   const [children, setChildren] = useState<Child[]>([])
   const [loading, setLoading] = useState(true)
 
+  // -----------------------------
+  // AUTH CHECK (token + user data)
+  // -----------------------------
+  useEffect(() => {
+    const token = localStorage.getItem("access_token")
+    const localUser = localStorage.getItem("user")
+
+    // No token → force login
+    if (!token || !localUser) {
+      console.error("Missing token or user. Redirecting.")
+      window.location.href = "/parent-login"
+      return
+    }
+
+    // Parse user and check role
+    try {
+      const parsedUser = JSON.parse(localUser)
+
+      if (!parsedUser?.role || parsedUser.role.toLowerCase() !== "parent") {
+        console.error("User is not a parent")
+        window.location.href = "/parent-login"
+        return
+      }
+    } catch (err) {
+      console.error("Invalid user JSON")
+      window.location.href = "/parent-login"
+      return
+    }
+  }, [])
+
+  // -----------------------------
+  // FETCH CHILDREN
+  // -----------------------------
   useEffect(() => {
     const fetchChildren = async () => {
       try {
         const token = localStorage.getItem("access_token")
-        if (!token) {
-          console.error("No token found, redirecting to login")
-          window.location.href = "/parent-login"
-          return
-        }
+        if (!token) return window.location.href = "/parent-login"
 
         const res = await axios.get("/api/v1/users/me/students", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
-        // Map API response to Child interface
+
         const mappedChildren = res.data.map((child: any) => ({
           id: child.id.toString(),
-          name: child.user?.full_name || child.user?.username || "Unknown",
+          name: child.user?.full_name || "Unknown",
+          username: child.user?.username || "unknown",
           age: child.age,
           grade: child.grade_level || "N/A",
         }))
 
         setChildren(mappedChildren)
+        localStorage.setItem("children", JSON.stringify(mappedChildren))
+
       } catch (err) {
         console.error("Failed to fetch children:", err)
       } finally {
@@ -62,13 +94,12 @@ export const Dashboard: React.FC = () => {
     window.location.href = `/edit-child/${childId}`
   }
 
-  if (loading) {
-    return <div className="p-8 text-center">Loading children...</div>
-  }
+  if (loading) return <div className="p-8 text-center">Loading children...</div>
 
   return (
     <div className="min-h-screen bg-blue-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="text-left mb-12">
@@ -79,14 +110,13 @@ export const Dashboard: React.FC = () => {
               View your children’s progress and manage their accounts.
             </p>
           </div>
-          <div className="flex items-right justify-between">
-            <button
-              onClick={handleAddChild}
-              className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-            >
-              Add Child
-            </button>
-          </div>
+
+          <button
+            onClick={handleAddChild}
+            className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+          >
+            Add Child
+          </button>
         </div>
 
         {children.length === 0 ? (
@@ -98,7 +128,6 @@ export const Dashboard: React.FC = () => {
                 key={child.id}
                 className="overflow-hidden flex items-center justify-between p-6 shadow-md bg-blue-50 hover:shadow-lg transition-shadow duration-200"
               >
-                {/* Left side: Info + Buttons */}
                 <div className="flex-1 pr-6">
                   <h3 className="text-xl font-bold text-foreground">
                     {child.name}
@@ -115,6 +144,7 @@ export const Dashboard: React.FC = () => {
                       <span>View Progress</span>
                       <ArrowRight className="h-4 w-4" />
                     </Button>
+
                     <Button
                       variant="secondary"
                       className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
@@ -126,7 +156,6 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right side: Avatar */}
                 <Avatar
                   className="h-32 w-32 rounded-full text-white shadow-md flex items-center justify-center"
                   style={{ backgroundColor: "rgba(231, 171, 119, 1)" }}

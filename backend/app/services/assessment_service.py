@@ -180,9 +180,9 @@ def calculate_difficulty_from_history(db: Session, assessment: Assessment, subto
     wrong_count = sum(1 for q in last_three if not q.is_correct)
 
     # Lower difficulty if student got 2 or more wrong in last 3
-    if wrong_count >= 2:
+    if wrong_count >= 3:
         difficulty_val = 0.25  # force to easy-ish
-    elif wrong_count <= 0:
+    elif wrong_count >= 1:
         difficulty_val = 0.50   # allow medium/hard if doing well
     else:
         difficulty_val = 0.85   # allow medium if mixed results
@@ -417,12 +417,16 @@ async def create_question(db: Session, assessment: Assessment) -> AssessmentQues
 
     total_assessment_questions = len(assessment.questions)
 
-    if total_assessment_questions > TOTAL_QUESTIONS_PER_ASSESSMENT:
+    if total_assessment_questions >= TOTAL_QUESTIONS_PER_ASSESSMENT:
         raise ValueError("Max questions per assessment reached")
 
     subtopic_list = get_subtopics_for_grade(assessment.subject, assessment.grade_level)
     # For simplicity, pick subtopic in round-robin fashion based on order
-    subtopic_index = (total_assessment_questions % int(TOTAL_QUESTIONS_PER_ASSESSMENT / len(subtopic_list))) if subtopic_list else 0
+    print(len(subtopic_list))
+    print(subtopic_list)
+    print(total_assessment_questions)
+    subtopic_index = int(total_assessment_questions / int(TOTAL_QUESTIONS_PER_ASSESSMENT / len(subtopic_list))) if subtopic_list and len(subtopic_list) > 1 else 0
+    print(subtopic_index)
     subtopic = subtopic_list[subtopic_index] if subtopic_list else None
 
     difficulty = calculate_difficulty_from_history(db, assessment, subtopic) if subtopic else 0.5
@@ -448,7 +452,7 @@ async def create_question(db: Session, assessment: Assessment) -> AssessmentQues
     learning_objectives = payload.get("learning_objectives")
     description = payload.get("description")
     prerequisites = payload.get("prerequisites")
-    subtopic = payload.get("sub_topic")
+    subtopic = subtopic
     subject = payload.get("subject")
 
     # check if question with same text exists for this question_bank

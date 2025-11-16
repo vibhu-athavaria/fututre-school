@@ -79,7 +79,7 @@ class AssessmentOut(BaseModel):
     id: int
     student_id: int
     subject: str
-    grade_level: str
+    grade_level: int
     status: str
     total_questions: int = 0
     questions_answered: int = 0
@@ -101,3 +101,4 @@ class AnswerOut(BaseModel):
     score: float
     feedback: Optional[str]
     next_question: Optional[QuestionOut]
+    status: str  # "in_progress"|"completed"
