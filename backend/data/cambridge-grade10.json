@@ -1,0 +1,81 @@
+{
+    "grade 10": {
+        "mathematics": {
+        "Number": [
+            "Percentages, fractions, decimals in context",
+            "Ratio, proportion and rate of change applications",
+            "Surds, indices and logarithms advanced",
+            "Apply real-world number skills"
+        ],
+        "Algebra": [
+            "Manipulate algebraic expressions and identities",
+            "Solve and represent quadratic, cubic and simultaneous equations",
+            "Graph linear and non-linear functions",
+            "Construct mathematical models"
+        ],
+        "Geometry": [
+            "Trigonometry advanced (sine, cosine, tangent, graphs)",
+            "Geometric transformations and proofs",
+            "Calculate surface area and volume"
+        ],
+        "Statistics": [
+            "Probability trees and conditional probability",
+            "Statistical investigations and reporting",
+            "Interpret histograms and cumulative frequency"
+        ]
+        },
+        "science": {
+        "Biology": [
+            "Cell specialization and function",
+            "Organ systems and their interactions",
+            "Genetics and biotechnologies",
+            "Ecology, populations and evolution"
+        ],
+        "Chemistry": [
+            "Chemical equations, balancing and rates",
+            "Periodic Table, reactivity series",
+            "Organic chemistry: hydrocarbons, polymers",
+            "Analysis and separation techniques"
+        ],
+        "Physics": [
+            "Forces and resultant motion",
+            "Thermal physics, energy transfer and efficiency",
+            "Electricity, circuits and electronics",
+            "Wave properties (sound, light, EM spectrum)"
+        ]
+        },
+        "english": {
+        "Reading": [
+            "Analyse classic and modern literature",
+            "Evaluate themes, perspectives and cultural context",
+            "Interpret structure, plot, and character development"
+        ],
+        "Writing": [
+            "Write extended literary and non-literary texts",
+            "Use advanced argument and persuasive techniques",
+            "Apply creative writing skills"
+        ],
+        "Speaking and listening": [
+            "Defend ideas and critique arguments",
+            "Oral storytelling and performance",
+            "Social communication and presentation"
+        ]
+        },
+        "humanities": {
+        "History": [
+            "World Wars and their consequences",
+            "Modern political movements",
+            "Analysis of primary and secondary sources"
+        ],
+        "Geography": [
+            "Development indicators and urbanisation",
+            "Fieldwork and map interpretation"
+        ],
+        "Global Perspectives": [
+            "Investigate international challenges",
+            "Cross-cultural communication",
+            "Present research to diverse audiences"
+        ]
+        }
+    }
+}

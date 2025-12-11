@@ -2,29 +2,26 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_active_user
-from app.crud.student import get_student_by_parent_and_id, update_student, delete_student
-from app.schemas.user import User, StudentProfileCreate, StudentProfileUpdate, StudentProfileResponse
+from app.crud.student import get_student_by_parent_and_id, update_student, delete_student, get_student_with_assessments
+from app.schemas.user import StudentProfileUpdate, StudentProfileResponse, StudentDetailResponse
 from app.models.user import User as UserModel, StudentProfile
 
 router = APIRouter()
 
-@router.get("/{student_id}", response_model=StudentProfileResponse)
+@router.get("/{student_id}", response_model=StudentDetailResponse)
 def read_student(
     student_id: int,
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user)
 ):
-    """Get student by ID (only if user is the parent or admin)"""
+    """Get student by ID"""
     if current_user.role == "admin":
         from app.crud.student import get_student
         student = get_student(db, student_id)
     elif current_user.role == "parent":
         student = get_student_by_parent_and_id(db, current_user.id, student_id)
     else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
+        student = get_student_with_assessments(db, student_id)
 
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")

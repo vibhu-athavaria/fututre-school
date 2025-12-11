@@ -1,0 +1,74 @@
+{
+  "grade 12": {
+    "mathematics": {
+      "Pure Mathematics": [
+        "Advanced functions and calculus",
+        "Complex numbers and further algebra",
+        "Differential equations",
+        "Further vectors and matrices"
+      ],
+      "Statistics": [
+        "Probability distributions and sampling",
+        "Advanced hypothesis testing",
+        "Interpreting statistical findings"
+      ],
+      "Mechanics": [
+        "Advanced kinematics and dynamics",
+        "Energy, work and power",
+        "Mechanical systems analysis"
+      ]
+    },
+    "science": {
+      "Biology": [
+        "Genomics and biotechnology",
+        "Physiology and health science",
+        "Ecosystem analysis",
+        "Research in life sciences"
+      ],
+      "Chemistry": [
+        "Advanced organic chemistry",
+        "Spectroscopy and analysis",
+        "Chemical research and applications"
+      ],
+      "Physics": [
+        "Advanced quantum physics",
+        "Electromagnetic theory",
+        "Nuclear and particle physics",
+        "Scientific reporting and investigation"
+      ]
+    },
+    "english": {
+      "Reading": [
+        "Advanced literary analysis",
+        "Comparative study of multiple texts",
+        "Argument, viewpoint and critical synthesis"
+      ],
+      "Writing": [
+        "Extended analytical essays",
+        "Research and documentation",
+        "Professional writing for college and careers"
+      ],
+      "Speaking and listening": [
+        "Defend scholarship orally",
+        "Seminar leadership",
+        "Advanced media analysis"
+      ]
+    },
+    "humanities": {
+      "History": [
+        "Comparative historical studies",
+        "Theories and approaches to history",
+        "Explore modern and ancient cultures"
+      ],
+      "Geography": [
+        "Field research",
+        "Political, urban and environmental geography"
+      ],
+      "Global Perspectives": [
+        "Capstone research project",
+        "International debate and presentation",
+        "Apply theory to global challenges"
+      ]
+    }
+  }
+}

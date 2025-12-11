@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr, validator
 from typing import Dict, Optional
 from datetime import datetime
 from app.models.user import UserRole
-
+from app.schemas.assessment import AssessmentOut
 
 # -------------------
 # USER SCHEMAS
@@ -86,12 +86,29 @@ class StudentProfileResponse(BaseModel):
     parent_id: int
     age: Optional[int] = None
     grade_level: Optional[int] = None
-    checkpoints: Optional[Dict[str, str]] = None
-
-    user: UserBase  # 👈 include relationship instead of flattening
+    user: UserBase
 
     class Config:
         from_attributes = True
+
+class AssessmentSubjectStatus(BaseModel):
+    assessment_id: int
+    status: str
+
+    class Config:
+        from_attributes = True
+
+class StudentDetailResponse(BaseModel):
+    id: int
+    parent_id: int
+    age: Optional[int] = None
+    grade_level: Optional[int] = None
+    user: Optional[UserBase] = None
+    assessments: Dict[str, AssessmentSubjectStatus]
+
+    class Config:
+        from_attributes = True
+
 # -------------------
 # LOGIN + TOKEN
 # -------------------

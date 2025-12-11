@@ -76,40 +76,73 @@ class LLMService:
 
         prompt = f"""
             Generate EXACTLY 1 {subject} assessment question for Grade {grade_level} with difficulty '{difficulty_level}'.
-            Follow ALL rules strictly.
+            Follow ALL rules strictly and output STRICT JSON ONLY (no extra text).
 
-            1. The question MUST be appropriate for Grade {grade_level} in terms of vocabulary, complexity, and domain knowledge.
-
-            2. The subject MUST be strictly followed: {subject}.
-            No cross-subject content.
-
-            3. The difficulty level MUST reflect '{difficulty_level}'.
-
-            4. The question type MUST be one of: 'MCQ' and 'True/False'.
+            RULES:
+            1. The question MUST be appropriate for Grade {grade_level}.
+            2. The subject MUST be exactly: {subject}. No cross-subject content.
+            3. The question MUST reflect the difficulty level '{difficulty_level}'.
+            4. The question type MUST be one of: 'MCQ' or 'True/False'.
 
             5. If question_type = 'MCQ':
-            - Provide 4 unique answer options.
-            - correct_answer MUST match exactly one option.
+            - Provide exactly 4 answer options.
+            - The correct_answer MUST match exactly one option.
 
             6. If question_type = 'True/False':
-            - No 'options'.
+            - Omit 'options'.
             - correct_answer MUST be 'True' or 'False'.
-            7. The question MUST be relevant to the topic: {topic or "General"}.
 
-            8. Output STRICT JSON ONLY:
+            7. The question MUST be relevant to this topic: {topic or "General"}.
+
+            8. Include:
+            - a clear 'description' of what the question assesses.
+            - 1–2 learning_objectives.
+            - prerequisites array (skills needed).
+
+            9. MUST generate a deterministic 'canonical_form'.
+            Examples:
+                Math:
+                PERIMETER_RECTANGLE(L=8,W=3)
+                SOLVE_LINEAR_EQUATION(Ax+B=C)
+                English:
+                READING_THEME(PASSAGE=HASH123)
+                VOCAB_CONTEXT(WORD=reluctant,PARA=2)
+                Science:
+                BIOLOGY_CELL_FUNCTION(MITOCHONDRIA)
+                PHYSICS_SPEED(D=20,T=4)
+                Humanities:
+                HISTORY_EVENT_DATE(WWII_END)
+                GEOGRAPHY_RIVER_LONGEST()
+            - It MUST be compact, uppercase, no spaces unless inside text.
+
+            10. MUST generate a 'problem_signature' JSON summarizing the conceptual category.
+            Example:
+            {{
+                "subject": "Math",
+                "topic": "Geometry",
+                "subtopic": "Area & Perimeter",
+                "concept": "perimeter_rectangle",
+                "operation": "calculate",
+                "grade_level": "6",
+                "difficulty": "easy"
+            }}
+
+            OUTPUT STRICT JSON ONLY (no prose):
             {{
             "question_text": "",
             "question_type": "",
             "options": [],
             "correct_answer": "",
             "subject": "",
-            "sub_topic": "",
+            "subtopic": "",
             "difficulty_level": "",
             "learning_objectives": [],
             "description": "",
-            "prerequisites": []
+            "prerequisites": [],
+            "canonical_form": "",
+            "problem_signature": {{}},
             }}
-            """
+        """
 
         logger.debug("LLM Question Prompt: %s", prompt)
         print("LLM Question Prompt: ", prompt)

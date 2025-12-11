@@ -1,5 +1,7 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import desc
+from sqlalchemy.orm import Session, selectinload
 from app.models.user import StudentProfile, User
+from app.models.assessment import Assessment
 from app.schemas.user import StudentProfileUpdate
 from typing import Optional
 from app.core.security import verify_password, get_password_hash
@@ -9,8 +11,43 @@ def get_student(db: Session, student_id: int) -> Optional[StudentProfile]:
 
 def get_student_by_username(db: Session, username: str) -> Optional[StudentProfile]:
     query = db.query(StudentProfile).filter(StudentProfile.username == username)
-    print(str(query.statement))   # prints the SQL (with placeholders like :param_1)
     return query.first()
+
+def get_student_with_assessments(db: Session, student_id: int) -> Optional[dict]:
+    # Load the student and base relations
+    query = (
+        db.query(StudentProfile)
+        .options(selectinload(StudentProfile.user))
+        .filter(StudentProfile.id == student_id)
+    )
+
+    student = query.first()
+    if not student:
+        return None
+
+    student_dict = student.__dict__.copy()
+
+    # Fetch most recent assessment per subject
+    assessments = (
+        db.query(Assessment)
+        .filter(Assessment.student_id == student_id)
+        .order_by(Assessment.subject, desc(Assessment.created_at))
+        .all()
+    )
+
+    # Keep only the latest assessment per subject
+    unique_latest = {}
+    for a in assessments:
+        if a.subject not in unique_latest:  # first occurrence = most recent
+            unique_latest[a.subject] = {
+                "assessment_id": a.id,
+                "status": a.status,
+            }
+
+    # Replace the structure in student_dict
+    student_dict["assessments"] = unique_latest
+
+    return student_dict
 
 def update_student(db: Session, student_id: int, updates: StudentProfileUpdate) -> StudentProfile | None:
     # Fetch student profile

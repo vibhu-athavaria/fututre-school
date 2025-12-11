@@ -1,11 +1,12 @@
 # app/models/assessment.py
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, JSON, Float
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 from app.core.database import Base
+from app.crud.mixin import SerializerMixin
 
-
-class Assessment(Base):
+class Assessment(Base, SerializerMixin):
     __tablename__ = "assessments"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -19,9 +20,9 @@ class Assessment(Base):
     questions_answered = Column(Integer, default=0)
     overall_score = Column(Float, nullable=True)  # 0-100
     time_taken = Column(Integer, nullable=True)  # in minutes
-    knowledge_gaps = Column(JSON, nullable=True)  # Array of topic areas with low scores
-    strengths = Column(JSON, nullable=True)  # Array of topic areas with high scores
-    recommendations = Column(JSON, nullable=True)  # AI-generated study recommendations
+    knowledge_gaps = Column(JSON, default=list)  # Array of topic areas with low scores
+    strengths = Column(JSON, default=list)  # Array of topic areas with high scores
+    recommendations = Column(JSON, default=list)  # AI-generated study recommendations
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
@@ -29,7 +30,7 @@ class Assessment(Base):
     student = relationship("StudentProfile", back_populates="assessments")
     questions = relationship("AssessmentQuestion", back_populates="assessment", cascade="all, delete-orphan")
     study_plan = relationship("StudyPlan", uselist=False, back_populates="assessment")
-
+    reports = relationship("AssessmentReport", back_populates="assessment", cascade="all, delete-orphan")
 
 class AssessmentQuestion(Base):
     __tablename__ = "assessment_questions"
@@ -49,7 +50,7 @@ class AssessmentQuestion(Base):
 
     # Relationships
     assessment = relationship("Assessment", back_populates="questions")
-    question_bank = relationship("QuestionBank", back_populates="assessment_questions")  # NEW
+    question_bank = relationship("QuestionBank", back_populates="assessment_questions")
 
 
 class QuestionBank(Base):
@@ -67,11 +68,32 @@ class QuestionBank(Base):
     options = Column(JSON, nullable=True)  # For multiple choice questions
     correct_answer = Column(Text, nullable=False)
     difficulty_level = Column(Float, default=0.5)  # 0.0-1.0 scale
+    canonical_form = Column(Text, nullable=False)
+    problem_signature = Column(JSON, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     assessment_questions = relationship("AssessmentQuestion", back_populates="question_bank")  # NEW
 
+class AssessmentReport(Base):
+    __tablename__ = "assessment_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    assessment_id = Column(
+        Integer,
+        ForeignKey("assessments.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    diagnostic_summary = Column(Text, nullable=True)
+    study_plan_json = Column(JSONB, nullable=True)
+    mastery_table_json = Column(JSONB, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationship back to Assessment object
+    assessment = relationship("Assessment", back_populates="reports")
 
 class StudentKnowledgeProfile(Base):
     __tablename__ = "student_knowledge_profiles"

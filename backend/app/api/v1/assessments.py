@@ -1,21 +1,18 @@
 # app/api/v1/assessments.py
+from app.models.assessment import Assessment, AssessmentReport, AssessmentQuestion
+from app.models.user import User, StudentProfile
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from app.core.database import get_db
-from app.core.config import settings
-from app import models
 from app.schemas import assessment as schemas
+from app.core.deps import get_current_user
+
 from app.services.assessment_service import (
     create_question,
-    choose_grade_by_age,
-    pick_next_topic_and_difficulty,
-    update_mastery,
     difficulty_float_from_label,
     difficulty_label_from_value,
-    get_subtopics_for_grade,
-    llm
+    get_or_create_assessment_report
 )
 from app.constants import (
     ASSESSMENT_STATUS_PROGRESS,
@@ -28,30 +25,29 @@ from app.constants import (
 
 router = APIRouter()
 
-
 @router.post("/", response_model=schemas.AssessmentOut)
-def create_assessment(payload: schemas.AssessmentCreate, db: Session = Depends(get_db)):
+def create_assessment(payload: schemas.AssessmentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Create a new assessment record. This endpoint **only creates the assessment**
     (no question generation). Use POST /{id}/questions to create questions.
     """
     print(f"Creating assessment for student_id={payload.student_id}, subject={payload.subject }")
 
-    student = db.query(models.StudentProfile).filter(models.StudentProfile.id == payload.student_id).first()
+    student = db.query(StudentProfile).filter(StudentProfile.id == payload.student_id).first()
 
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
     # check if there is already an in-progress assessment for this student
     existing = (
-        db.query(models.Assessment)
+        db.query(Assessment)
         .filter(
-            models.Assessment.student_id == payload.student_id,
-            models.Assessment.status == ASSESSMENT_STATUS_PROGRESS,
-            models.Assessment.subject == payload.subject,
-            models.Assessment.grade_level == student.grade_level
+            Assessment.student_id == payload.student_id,
+            Assessment.status == ASSESSMENT_STATUS_PROGRESS,
+            Assessment.subject == payload.subject,
+            Assessment.grade_level == student.grade_level
         )
-        .order_by(models.Assessment.created_at.desc())
+        .order_by(Assessment.created_at.desc())
         .first()
     )
     if existing:
@@ -59,7 +55,7 @@ def create_assessment(payload: schemas.AssessmentCreate, db: Session = Depends(g
         return existing
 
     grade_level = student.grade_level
-    assessment = models.Assessment(
+    assessment = Assessment(
         student_id=payload.student_id,
         subject=payload.subject,
         grade_level=grade_level,
@@ -77,7 +73,7 @@ def create_assessment(payload: schemas.AssessmentCreate, db: Session = Depends(g
 
 
 @router.post("/{assessment_id}/questions", response_model=schemas.QuestionOut)
-async def create_assessment_question(assessment_id: int, db: Session = Depends(get_db)):
+async def create_assessment_question(assessment_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Create a new question for an existing assessment.
 
@@ -87,7 +83,7 @@ async def create_assessment_question(assessment_id: int, db: Session = Depends(g
     - Uses student_profile checkpoint fields as preference hints (if present).
     - Returns the created question or raises error if limits reached or assessment closed.
     """
-    assessment = db.query(models.Assessment).filter(models.Assessment.id == assessment_id).first()
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
     if not assessment:
         raise HTTPException(status_code=404, detail="Assessment not found")
 
@@ -104,7 +100,7 @@ async def create_assessment_question(assessment_id: int, db: Session = Depends(g
 
 
 @router.post("/{assessment_id}/questions/{question_id}/answer", response_model=schemas.AnswerOut)
-async def check_answer_and_next(assessment_id: int, question_id: int, payload: schemas.AnswerSubmit, db: Session = Depends(get_db)):
+async def check_answer_and_next(assessment_id: int, question_id: int, payload: schemas.AnswerSubmit, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Submit an answer for a question:
     - Update the question record (is_correct/score/answered_at/time_taken).
@@ -114,8 +110,8 @@ async def check_answer_and_next(assessment_id: int, question_id: int, payload: s
     - Return next question (if any) or None.
     """
     # Load question
-    question = db.query(models.AssessmentQuestion).filter(
-        models.AssessmentQuestion.id == question_id
+    question = db.query(AssessmentQuestion).filter(
+        AssessmentQuestion.id == question_id
     ).first()
 
     if not question:
@@ -200,29 +196,85 @@ async def check_answer_and_next(assessment_id: int, question_id: int, payload: s
 
 
 @router.get("/{assessment_id}", response_model=schemas.AssessmentOut)
-def get_assessment(assessment_id: int, db: Session = Depends(get_db)):
-    assessment = db.query(models.Assessment).filter(models.Assessment.id == assessment_id).first()
+def get_assessment(assessment_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
     if not assessment:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return assessment
 
 
-@router.post("/{assessment_id}/completed", response_model=schemas.AssessmentOut)
-def complete_assessment(assessment_id: int, db: Session = Depends(get_db)):
-    assessment = db.query(models.Assessment).filter(models.Assessment.id == assessment_id).first()
+@router.post("/{assessment_id}/completed", response_model=schemas.AssessmentReport)
+def complete_assessment(assessment_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
     if not assessment:
         raise HTTPException(status_code=404, detail="Assessment not found")
-    # Build mastery_map
-    skps = db.query(models.StudentKnowledgeProfile).join(models.QuestionBank).filter(
-        models.StudentKnowledgeProfile.student_id == assessment.student_id,
-        models.QuestionBank.subject == assessment.subject
-    ).all()
-    mastery_map = {skp.knowledge_area.topic: skp.mastery_level for skp in skps}
-    plan_payload = llm.generate_study_plan(mastery_map, assessment.subject, assessment.grade_level)
-    assessment.recommendations = plan_payload
-    # assessment.status = ASSESSMENT_STATUS_COMPLETED
-    assessment.completed_at = datetime.now(timezone.utc)
-    db.add(assessment)
-    db.commit()
-    db.refresh(assessment)
-    return assessment
+
+    if assessment.status != ASSESSMENT_STATUS_COMPLETED:
+        raise HTTPException(status_code=400, detail="Assessment is not marked as completed yet")
+
+    student_name = assessment.student.user.full_name
+    grade_level = assessment.grade_level
+
+    return get_or_create_assessment_report(db, assessment_id, student_name, grade_level)
+
+@router.get("/{assessment_id}/report", response_model=schemas.AssessmentReportResponse)
+def get_assessment_report(
+    assessment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+
+    #Load Assessment
+    assessment = db.query(Assessment).filter(
+        Assessment.id == assessment_id
+    ).first()
+
+    if not assessment:
+        raise HTTPException(404, "Assessment not found")
+
+    # If not completed → return a minimal response
+    if assessment.status != "completed":
+        return {
+            "completed": False,
+            "assessment_report": None,
+            "diagnostic_summary": None,
+        }
+
+    # Get latest AssessmentReport
+    report = (
+        db.query(AssessmentReport)
+        .filter(AssessmentReport.assessment_id == assessment_id)
+        .order_by(AssessmentReport.created_at.desc())
+        .first()
+    )
+
+    if not report:
+        raise HTTPException(404, "No report generated yet")
+
+    mastery_rows = report.mastery_table_json or []
+
+    # Compute overall score + topic list
+    score = sum(row.get("correct", 0) for row in mastery_rows)
+    total = sum(row.get("total_questions", 0) for row in mastery_rows)
+
+    topics = [
+        {
+            "name": row.get("subtopic").title(),
+            "correct": row.get("correct", 0),
+            "total": row.get("total_questions", 0),
+        }
+        for row in mastery_rows
+    ]
+
+    # Final response matching your React UI
+    return {
+        "completed": True,
+        "assessment_report": {
+            "score": score,
+            "total": total,
+            "topics": topics,
+        },
+        "diagnostic_summary": report.diagnostic_summary,
+    }
+
+

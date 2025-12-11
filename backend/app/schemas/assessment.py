@@ -102,3 +102,28 @@ class AnswerOut(BaseModel):
     feedback: Optional[str]
     next_question: Optional[QuestionOut]
     status: str  # "in_progress"|"completed"
+
+class AssessmentReport(BaseModel):
+    id: int
+    assessment_id: int
+    diagnostic_summary: str
+    study_plan_json: List[Dict[str, Any]]
+    mastery_table_json: List[Dict[str, Any]]
+
+    class Config:
+        orm_mode = True
+
+class AssessmentTopic(BaseModel):
+    name: str
+    correct: int
+    total: int
+
+class AssessmentReportSchema(BaseModel):
+    score: int
+    total: int
+    topics: List[AssessmentTopic]
+
+class AssessmentReportResponse(BaseModel):
+    completed: bool
+    assessment_report: Optional[AssessmentReportSchema]
+    diagnostic_summary: Optional[str]

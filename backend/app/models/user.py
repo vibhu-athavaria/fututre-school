@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
 import enum
+from app.crud.mixin import SerializerMixin
 
 class UserRole(str, enum.Enum):
     PARENT = "parent"
@@ -10,7 +11,7 @@ class UserRole(str, enum.Enum):
     ADMIN = "admin"
 
 
-class User(Base):
+class User(Base, SerializerMixin):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -51,7 +52,7 @@ class User(Base):
     # notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 
-class StudentProfile(Base):
+class StudentProfile(Base, SerializerMixin):
     __tablename__ = "student_profiles"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -74,15 +75,14 @@ class StudentProfile(Base):
         back_populates="children_profiles",
         foreign_keys=[parent_id]
     )
+    # Assessments
+    assessments = relationship("Assessment", back_populates="student", lazy="selectin",cascade="all, delete-orphan")
 
-    # Progress tracking
+     # Progress tracking
     # progress_records = relationship("Progress", back_populates="student")
 
     # Study Plans
     # study_plans = relationship("StudyPlan", back_populates="student", cascade="all, delete-orphan")
-
-    # Assessments
-    assessments = relationship("Assessment", back_populates="student", cascade="all, delete-orphan")
 
     # tutor_sessions = relationship("TutorSession", back_populates="student", cascade="all, delete-orphan")
     # answers = relationship("StudentAnswer", back_populates="student", cascade="all, delete-orphan")

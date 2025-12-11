@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User, Bell } from 'lucide-react';
+import { Menu, X, User, Bell, BookOpen, Home, TrendingUp, MessageCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
@@ -9,167 +8,239 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ variant = 'landing' }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
-  const location = useLocation();
+const { user, signOut } = useAuth();
 
   // Decide navItems based on role
   const navItems =
     variant === 'dashboard' && user?.role === 'student'
       ? [
-          { name: 'Home', path: '/child-dashboard' },
-          { name: 'Study Plan', path: '/study-plan' },
-          { name: 'Progress', path: '/progress' },
-          { name: 'AI Tutor', path: '/ai-tutor' },
+          { name: 'Home', path: '/child-dashboard', icon: Home },
+          { name: 'Study Plan', path: '/study-plan', icon: BookOpen },
+          { name: 'Progress', path: '/progress', icon: TrendingUp },
+          { name: 'AI Tutor', path: '/ai-tutor', icon: MessageCircle },
         ]
       : variant === 'dashboard' && user?.role === 'parent'
-      ? [] // parent: no nav items
+      ? []
       : [
-          { name: 'Home', path: '/' },
-          { name: 'About Us', path: '/about' },
-          { name: 'Contact', path: '/contact' },
+          { name: 'Home', path: '/', icon: Home },
+          { name: 'About Us', path: '/about', icon: Sparkles },
+          { name: 'Contact', path: '/contact', icon: MessageCircle },
         ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => window.location.pathname === path;
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-100">
+    <header className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded-sm"></div>
+          <a href="/" className="flex items-center space-x-3 group">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-200">
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-white" />
+              </div>
             </div>
-            <span className="text-xl font-bold text-gray-900">Future School</span>
-          </Link>
-
+            <div>
+              <span className="text-xl font-bold text-white">Future School</span>
+              <div className="text-xs text-blue-100 -mt-1">Learn. Grow. Succeed.</div>
+            </div>
+          </a>
           {/* Desktop Navigation */}
-          {user?.role === 'student' && (
-            <nav className="hidden md:flex space-x-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`text-sm font-medium transition-colors duration-200 ${
-                    isActive(item.path)
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-700 hover:text-blue-600'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+          {user?.role === 'student' && variant === 'dashboard' && (
+            <nav className="hidden md:flex items-center space-x-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
+                return (
+                  <a
+                    key={item.name}
+                    href={item.path}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      active
+                        ? 'bg-white text-blue-600 shadow-md'
+                        : 'text-white hover:bg-white/20 backdrop-blur-sm'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm">{item.name}</span>
+                  </a>
+                );
+              })}
+            </nav>
+          )}
+
+          {/* Landing Navigation */}
+          {variant === 'landing' && (
+            <nav className="hidden md:flex items-center space-x-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <a
+                    key={item.name}
+                    href={item.path}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm">{item.name}</span>
+                  </a>
+                );
+              })}
             </nav>
           )}
 
           {/* Desktop Auth / Profile */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
+
             {user ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 {/* Notifications only for students */}
                 {user.role === 'student' && (
-                  <Bell className="w-5 h-5 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors" />
-                )}
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <button
-                    onClick={signOut}
-                    className="text-sm text-gray-700 hover:text-blue-600 transition-colors"
-                  >
-                    Sign Out
+                  <button className="relative p-2 rounded-lg bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-200">
+                    <Bell className="w-5 h-5 text-white" />
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                   </button>
+                )}
+                <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 hover:bg-white/30 transition-all duration-200">
+                  <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-md">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-sm font-semibold text-white">{user.full_name || 'Student'}</div>
+                    <div className="text-xs text-blue-100">{'Grade ' + (user.student_profile?.grade_level)}</div>
+                  </div>
                 </div>
+                <button
+                  onClick={signOut}
+                  className="px-4 py-2 rounded-lg font-medium text-white bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-200"
+                >
+                  Sign Out
+                </button>
               </div>
             ) : (
-              <>
-                <Link
-                  to="/student-login"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              <div className="flex items-center space-x-2">
+                <a
+                  href="/student-login"
+                  className="px-4 py-2 rounded-lg font-medium text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
                 >
                   Student Login
-                </Link>
-                <Link
-                  to="/parent-login"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                </a>
+                <a
+                  href="/parent-login"
+                  className="px-4 py-2 rounded-lg font-medium text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
                 >
                   Parent Login
-                </Link>
-                <Link
-                  to="/signup"
-                  className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                </a>
+                <a
+                  href="/signup"
+                  className="px-5 py-2 rounded-lg font-semibold bg-white text-blue-600 hover:bg-blue-50 transition-all duration-200 shadow-lg"
                 >
-                  Sign Up
-                </Link>
-              </>
+                  Sign Up Free
+                </a>
+              </div>
             )}
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500"
+            className="md:hidden p-2 rounded-lg bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all"
           >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isMenuOpen ? (
+              <X className="w-6 h-6 text-white" />
+            ) : (
+              <Menu className="w-6 h-6 text-white" />
+            )}
           </button>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
+        <div className="md:hidden bg-white/10 backdrop-blur-lg border-t border-white/20">
+          <div className="px-4 py-4 space-y-2">
             {/* Show nav only if student */}
             {user?.role === 'student' &&
-              navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              navItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
+                return (
+                  <a
+                    key={item.name}
+                    href={item.path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${
+                      active
+                        ? 'bg-white text-blue-600 shadow-md'
+                        : 'text-white hover:bg-white/20'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{item.name}</span>
+                  </a>
+                );
+              })}
+
+            {/* Landing nav items */}
+            {variant === 'landing' &&
+              navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <a
+                    key={item.name}
+                    href={item.path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-white hover:bg-white/20 transition-all"
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{item.name}</span>
+                  </a>
+                );
+              })}
 
             {user ? (
-              <button
-                onClick={() => {
-                  signOut();
-                  setIsMenuOpen(false);
-                }}
-                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-              >
-                Sign Out
-              </button>
+              <div className="pt-2 border-t border-white/20 space-y-2">
+                <div className="flex items-center gap-3 px-4 py-3 bg-white/20 rounded-lg">
+                  <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">{user.name || 'Student'}</div>
+                    <div className="text-sm text-blue-100">Grade 6</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-3 rounded-lg font-medium bg-white/20 text-white hover:bg-white/30 transition-all"
+                >
+                  Sign Out
+                </button>
+              </div>
             ) : (
-              <div className="px-3 py-2 space-y-2">
-                <Link
-                  to="/student-login"
+              <div className="pt-2 border-t border-white/20 space-y-2">
+                <a
+                  href="/student-login"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block w-full text-center px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 border border-gray-300 hover:border-blue-600 transition-colors"
+                  className="block w-full text-center px-4 py-3 rounded-lg font-medium text-white bg-white/20 hover:bg-white/30 transition-all"
                 >
                   Student Login
-                </Link>
-                <Link
-                  to="/parent-login"
+                </a>
+                <a
+                  href="/parent-login"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block w-full text-center px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 border border-gray-300 hover:border-blue-600 transition-colors"
+                  className="block w-full text-center px-4 py-3 rounded-lg font-medium text-white bg-white/20 hover:bg-white/30 transition-all"
                 >
                   Parent Login
-                </Link>
-                <Link
-                  to="/signup"
+                </a>
+                <a
+                  href="/signup"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block w-full text-center bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="block w-full text-center bg-white text-blue-600 hover:bg-blue-50 px-4 py-3 rounded-lg font-semibold transition-all shadow-lg"
                 >
-                  Sign Up
-                </Link>
+                  Sign Up Free
+                </a>
               </div>
             )}
           </div>

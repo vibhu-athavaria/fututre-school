@@ -1,0 +1,105 @@
+{
+  "grade 7": {
+    "mathematics": {
+      "Number": [
+        "Use place value to write and order numbers up to 100,000,000",
+        "Round numbers to a required degree of accuracy",
+        "Understand and use factors, multiples, primes, squares, and cubes",
+        "Use ratio and proportion to solve problems",
+        "Convert between fractions, decimals and percentages",
+        "Compare and order numbers including negatives and decimals"
+      ],
+      "Algebra": [
+        "Understand and use algebraic notation",
+        "Formulate and solve linear equations",
+        "Use simple formulae and functions",
+        "Generate sequences and describe the rule",
+        "Represent problems algebraically"
+      ],
+      "Geometry": [
+        "Classify polygons and 3D shapes",
+        "Use properties and vocabulary of angles",
+        "Calculate angles in triangles, quadrilaterals, and circles",
+        "Reflect and translate shapes on a coordinate plane",
+        "Understand properties of parallel and perpendicular lines"
+      ],
+      "Statistics": [
+        "Collect, process and interpret statistical data",
+        "Use mean, median, mode, and range as measures of central tendency",
+        "Construct and interpret bar graphs, line graphs, pie charts",
+        "Understand probability as a measure of likelihood"
+      ],
+      "Measurement": [
+        "Convert metric units for length, mass, volume and area",
+        "Calculate perimeter and area for triangles, rectangles, and compound figures",
+        "Solve time and temperature problems",
+        "Estimate measurements using practical contexts"
+      ]
+    },
+    "science": {
+      "Biology": [
+        "Cells and their functions",
+        "Levels of organization (tissues, organs, systems)",
+        "Plant reproduction and pollination",
+        "Human body systems: respiratory, digestive"
+      ],
+      "Chemistry": [
+        "Properties of solids, liquids and gases",
+        "Changes of state and particle theory",
+        "Mixtures and methods of separating substances",
+        "Simple chemical reactions"
+      ],
+      "Physics": [
+        "Forces and their effects (types, direction, magnitude)",
+        "Speed, distance and time",
+        "Energy forms and transfers",
+        "Magnetism and electromagnetism"
+      ],
+      "Earth & Space": [
+        "Weather and climate",
+        "Earth's structure and processes"
+      ],
+      "Scientific enquiry": [
+        "Formulate hypotheses and questions",
+        "Design and plan investigations",
+        "Record, analyze, and interpret results",
+        "Draw valid conclusions"
+      ]
+    },
+    "english": {
+      "Reading": [
+        "Develop reading for comprehension and inference",
+        "Analyse language, structure and literary devices",
+        "Compare texts across genres",
+        "Evaluate author's viewpoint and purpose"
+      ],
+      "Writing": [
+        "Plan, draft and refine writing for a range of genres",
+        "Use factual and imaginative styles",
+        "Organise writing effectively using paragraphs and connectives",
+        "Employ accurate grammar and varied punctuation"
+      ],
+      "Speaking and listening": [
+        "Participate in discussions and debates",
+        "Deliver oral presentations with clarity",
+        "Active and critical listening to others"
+      ]
+    },
+    "humanities": {
+      "History": [
+        "Medieval societies",
+        "Development of civilizations",
+        "Significant historical figures/events"
+      ],
+      "Geography": [
+        "Physical geography (landforms, water, weather systems)",
+        "Human geography (population, settlement, migration)"
+      ],
+      "Global Perspectives": [
+        "Personal identity and values",
+        "Social and environmental responsibility",
+        "Compare cultural perspectives"
+      ]
+    }
+  }
+}

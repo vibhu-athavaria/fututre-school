@@ -1,16 +1,19 @@
 # app/services/assessment_service.py
+import pandas as pd
+import json
 import math, random
-from typing import Optional, Tuple, Dict, Any, List
+from datetime import datetime, timezone
+from typing import Optional, Dict, Any, List
 from venv import logger
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-import json
-
-from sqlalchemy.orm import Session
-from datetime import datetime, timezone
-
-
-from app.models.assessment import Assessment, AssessmentQuestion, QuestionBank, StudentKnowledgeProfile
+from sqlalchemy import func, select, text
+from app.models.assessment import (
+    Assessment,
+    AssessmentQuestion,
+    AssessmentReport,
+    QuestionBank,
+    StudentKnowledgeProfile
+)
 from app.models.user import StudentProfile  # adjust import to match your structure
 from app.services.llm_service import llm_service as llm
 
@@ -409,6 +412,45 @@ def _next_question_number(db: Session, assessment: Assessment) -> int:
     return int(last) + 1
 
 
+def find_duplicates_question(
+    db: Session,
+    subject: str,
+    grade_level: str,
+    canonical_form: str,
+    problem_signature: dict
+):
+    result = {
+        "canonical_match": None,
+        "signature_match": None
+    }
+
+    # Canonical match (fast exact check)
+    if canonical_form:
+        q = db.execute(
+            text("SELECT id FROM question_bank WHERE canonical_form = :c LIMIT 1"),
+            {"c": canonical_form}
+        ).first()
+        if q:
+            result["canonical_match"] = q[0]
+            return result
+
+    # Exact problem_signature match
+    if problem_signature:
+        q = db.execute(
+            text("""
+                SELECT id
+                FROM question_bank
+                WHERE problem_signature = CAST(:sig AS jsonb)
+                LIMIT 1
+            """),
+            {"sig": json.dumps(problem_signature)}
+        ).first()
+        if q:
+            result["signature_match"] = q[0]
+            return result
+
+    return result
+
 async def create_question(db: Session, assessment: Assessment) -> AssessmentQuestion:
     """
     Create a question using LLM and persist it.
@@ -422,11 +464,7 @@ async def create_question(db: Session, assessment: Assessment) -> AssessmentQues
 
     subtopic_list = get_subtopics_for_grade(assessment.subject, assessment.grade_level)
     # For simplicity, pick subtopic in round-robin fashion based on order
-    print(len(subtopic_list))
-    print(subtopic_list)
-    print(total_assessment_questions)
     subtopic_index = int(total_assessment_questions / int(TOTAL_QUESTIONS_PER_ASSESSMENT / len(subtopic_list))) if subtopic_list and len(subtopic_list) > 1 else 0
-    print(subtopic_index)
     subtopic = subtopic_list[subtopic_index] if subtopic_list else None
 
     difficulty = calculate_difficulty_from_history(db, assessment, subtopic) if subtopic else 0.5
@@ -444,6 +482,24 @@ async def create_question(db: Session, assessment: Assessment) -> AssessmentQues
     except Exception as e:
         raise ValueError("Failed to generate question from LLM. Error: {}".format(str(e)))
 
+    duplicates = find_duplicates_question(
+        db,
+        assessment.subject,
+        str(assessment.grade_level),
+        payload.get("canonical_form"),
+        payload.get("problem_signature")
+    )
+
+    if duplicates["canonical_match"]:
+        question_bank = db.query(QuestionBank).filter(QuestionBank.id == duplicates["canonical_match"]).first()
+        existing_q = True
+    elif duplicates["signature_match"]:
+        question_bank = db.query(QuestionBank).filter(QuestionBank.id == duplicates["signature_match"]).first()
+        existing_q = True
+    else:
+        question_bank = None
+        existing_q = False
+
     q_text = payload.get("question_text")
     q_type = payload.get("question_type")
     options = payload.get("options")
@@ -454,14 +510,6 @@ async def create_question(db: Session, assessment: Assessment) -> AssessmentQues
     prerequisites = payload.get("prerequisites")
     subtopic = subtopic
     subject = payload.get("subject")
-
-    # check if question with same text exists for this question_bank
-    existing_q = db.query(QuestionBank).filter(
-        func.lower(QuestionBank.question_text) == func.lower(q_text),
-        QuestionBank.subject == subject,
-        (QuestionBank.subtopic == subtopic) if subtopic is not None else (QuestionBank.subtopic.is_(None)),
-        func.lower(QuestionBank.grade_level) == func.lower(str(assessment.grade_level))
-    ).first()
 
     if not existing_q:
         question_bank = QuestionBank(
@@ -629,3 +677,176 @@ async def score_answer_and_maybe_next(db: Session, assessment: Assessment, quest
         "next_question": next_q,
         "assessment_completed": False
     }
+
+# ---------- Process completed assessment and generate summary ----------
+def get_subtopic_mastery_results_for_assessment(db: Session, assessment_id: int):
+    query = (
+        select(
+            QuestionBank.subtopic,
+            func.count().label("total_questions"),
+            func.sum(AssessmentQuestion.score).label("correct"),
+            func.avg(AssessmentQuestion.score).label("accuracy"),
+            func.avg(QuestionBank.difficulty_level).label("avg_difficulty"),
+            (
+                func.sum(AssessmentQuestion.score * QuestionBank.difficulty_level) /
+                func.sum(QuestionBank.difficulty_level)
+            ).label("difficulty_weighted_mastery")
+        )
+        .join(AssessmentQuestion, AssessmentQuestion.question_bank_id == QuestionBank.id)
+        .where(
+            AssessmentQuestion.assessment_id == assessment_id
+        )
+        .group_by(QuestionBank.subtopic)
+    )
+
+    rows = db.execute(query).mappings().all()
+    return rows
+
+def compute_composite_mastery(rows):
+    df = pd.DataFrame(rows)
+
+    df["composite_mastery"] = (
+        0.6 * df["difficulty_weighted_mastery"] +
+        0.4 * df["accuracy"]
+    )
+
+    return df
+
+
+def generate_diagnostic_summary(student_name, grade_level, df):
+    strengths = df[df.composite_mastery >= 0.80]["subtopic"].tolist()
+    developing = df[(df.composite_mastery >= 0.50) & (df.composite_mastery < 0.80)]["subtopic"].tolist()
+    gaps = df[df.composite_mastery < 0.50]["subtopic"].tolist()
+
+    summary = f"""
+        Diagnostic Summary for {student_name} (Grade {grade_level})
+
+        Overall Performance:
+        - Strong Areas: {", ".join(strengths) if strengths else "None yet – still learning!"}
+        - Developing Areas: {", ".join(developing) if developing else "None"}
+        - Areas Needing Support: {", ".join(gaps) if gaps else "None"}
+
+        What This Means:
+        - Strong Areas: These are subtopics where your child has demonstrated clear understanding.
+        - Developing Areas: These need more practice and reinforcement.
+        - Areas Needing Support: These are the foundational concepts we will focus on next.
+
+        We will now create a personalized learning plan to close knowledge gaps and strengthen overall mastery.
+        """
+    return summary
+
+
+def generate_study_plan(df):
+
+    study_plan = []
+
+    for _, row in df.iterrows():
+        subtopic = row["subtopic"]
+        mastery = row["composite_mastery"]
+
+        if mastery < 0.50:
+            plan_type = "Needs Support"
+            activities = [
+                "Watch concept-explainer video (5–7 mins)",
+                "Do guided practice problems (3–5 problems)",
+                "Solve a short MCQ quiz (3–5 questions)"
+            ]
+
+        elif mastery < 0.80:
+            plan_type = "Developing"
+            activities = [
+                "Do mixed-practice problems (5–8 problems)",
+                "Solve a short MCQ quiz (5 questions)",
+                "Complete 1 applied real-world example"
+            ]
+
+        else:
+            plan_type = "Mastered"
+            activities = [
+                "Optional: Enrichment problem set",
+                "Optional: Real-world application challenge"
+            ]
+
+        study_plan.append({
+            "subtopic": subtopic,
+            "mastery_level": plan_type,
+            "recommended_activities": activities
+        })
+
+    return study_plan
+
+def get_or_create_assessment_report(db: Session, assessment_id: int, student_name: str, grade_level: int) -> Dict[str, Any]:
+    existing_report = db.query(AssessmentReport).filter(AssessmentReport.assessment_id == assessment_id).first()
+    if existing_report:
+        return existing_report
+
+    rows = process_completed_assessment(db, assessment_id, student_name, grade_level)
+
+    report = AssessmentReport(
+        assessment_id=assessment_id,
+        diagnostic_summary=rows['diagnostic_summary'],
+        study_plan_json=rows['study_plan'],
+        mastery_table_json=rows['mastery_table']
+    )
+    db.add(report)
+    db.commit()
+    db.refresh(report)
+
+    return report
+
+
+def process_completed_assessment(db: Session, assessment_id :int, student_name: str, grade_level: int) -> Dict[str, Any]:
+
+    # Step 1: get results
+    rows = get_subtopic_mastery_results_for_assessment(db, assessment_id)
+
+    # # Step 2: compute mastery
+    df = compute_composite_mastery(rows)
+
+    # # Step 3: create diagnostic summary
+    diagnostic_summary = generate_diagnostic_summary(student_name, grade_level, df)
+
+    # # Step 4: generate study plan
+    study_plan = generate_study_plan(df)
+
+    # # Step 5: store mastery into database for future growth tracking
+    # save_mastery_scores(db, student_id, assessment_id, df)
+
+    # # Step 6: return everything to frontend / parent dashboard
+    # return {
+    #     "diagnostic_summary": diagnostic_summary,
+    #     "study_plan": study_plan,
+    #     "mastery_table": df.to_dict(orient="records")
+    # }
+
+    return {"diagnostic_summary": diagnostic_summary, "study_plan": study_plan, "mastery_table": df.to_dict(orient="records")}
+
+
+def db_query_for_diagnostic(db: Session, assessment_id: int):
+    """Helper to get diagnostic data for an assessment."""
+    query = """
+        WITH per_sub AS (
+        SELECT
+            subtopic,
+            COUNT(*) AS total_questions,
+            SUM(score) AS correct,
+            AVG(score)::numeric AS accuracy,
+            AVG(difficulty_level)::numeric AS avg_difficulty,
+            SUM(score * difficulty_level)::numeric AS weighted_sum,
+            SUM(difficulty_level)::numeric AS difficulty_sum
+        from assessment_questions inner join question_bank as qb on qb.id = question_bank_id  where assessment_id = 7
+        GROUP BY subtopic
+        )
+        SELECT
+        subtopic,
+        total_questions,
+        correct,
+        accuracy,
+        avg_difficulty,
+        (weighted_sum / NULLIF(difficulty_sum,0))::numeric(6,4) AS difficulty_weighted_mastery,
+        -- composite = 0.6 * weighted + 0.4 * accuracy
+        (0.6 * (weighted_sum / NULLIF(difficulty_sum,0)) + 0.4 * accuracy)::numeric(6,4) AS composite_mastery
+        FROM per_sub
+        ORDER BY composite_mastery ASC;
+    """
+    return query

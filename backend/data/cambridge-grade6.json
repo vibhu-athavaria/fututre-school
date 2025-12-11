@@ -1,0 +1,129 @@
+{
+  "grade 6": {
+    "mathematics": {
+      "Number": [
+        "Read, write and order whole numbers to at least 1,000,000 and position them on a number line",
+        "Use negative numbers in context and calculate intervals across zero",
+        "Multiply and divide numbers by 10, 100 and 1000 giving answers up to three decimal places",
+        "Round any whole number to a required degree of accuracy",
+        "Identify common factors, common multiples and prime numbers",
+        "Recognise and use square numbers and cube numbers",
+        "Recognise and use relationships between operations including inverse operations",
+        "Use estimation to check answers to calculations",
+        "Solve problems involving ratio and proportion"
+      ],
+      "Calculation": [
+        "Multiply multi-digit numbers up to 4 digits by a two-digit whole number using the formal written method",
+        "Divide numbers up to 4 digits by a two-digit whole number using the formal written method",
+        "Interpret remainders as whole number remainders, fractions, or by rounding, as appropriate for the context",
+        "Perform mental calculations, including with mixed operations and large numbers",
+        "Identify the value of each digit to three decimal places and multiply and divide numbers by 10, 100 and 1000",
+        "Solve multi-step problems in contexts, deciding which operations and methods to use and why",
+        "Use written division methods in cases where the answer has up to two decimal places"
+      ],
+      "Fractions/Decimals/Percentages": [
+        "Use common factors to simplify fractions; use common multiples to express fractions in the same denomination",
+        "Compare and order fractions, including fractions > 1",
+        "Add and subtract fractions with different denominators and mixed numbers, using the concept of equivalent fractions",
+        "Multiply simple pairs of proper fractions, writing the answer in its simplest form",
+        "Divide proper fractions by whole numbers",
+        "Associate a fraction with division and calculate decimal fraction equivalents",
+        "Recall and use equivalences between simple fractions, decimals and percentages, including in different contexts"
+      ],
+      "Geometry": [
+        "Draw 2-D shapes using given dimensions and angles",
+        "Recognise, describe and build simple 3-D shapes, including making nets",
+        "Compare and classify geometric shapes based on their properties and sizes",
+        "Find unknown angles in triangles, quadrilaterals, and regular polygons",
+        "Describe positions on the full coordinate grid (all four quadrants)",
+        "Draw and translate simple shapes on the coordinate plane, and reflect them in the axes"
+      ],
+      "Measurement": [
+        "Solve problems involving the calculation and conversion of units of measure, using decimal notation up to three decimal places where appropriate",
+        "Use, read, write and convert between standard units, converting measurements of length, mass, volume and time from a smaller unit of measure to a larger unit, and vice versa, using decimal notation up to three decimal places",
+        "Convert between miles and kilometres",
+        "Recognise that shapes with the same areas can have different perimeters and vice versa",
+        "Calculate the area of parallelograms and triangles",
+        "Calculate, estimate and compare volume of cubes and cuboids using standard units"
+      ],
+      "Handling Data (Statistics)": [
+        "Interpret and construct pie charts and line graphs and use these to solve problems",
+        "Calculate and interpret the mean as an average"
+      ],
+      "Problem Solving": [
+        "Solve complex, multi-step word problems",
+        "Identify patterns, sequences, and trends in mathematical contexts",
+        "Apply reasoning and logic in unfamiliar situations",
+        "Estimate and check using sensible strategies"
+      ]
+    },
+    "science": {
+      "Scientific enquiry": [
+        "Ask questions and make predictions",
+        "Plan and carry out fair tests",
+        "Record data and present findings",
+        "Interpret and draw conclusions from data",
+        "Use evidence to support ideas"
+      ],
+      "Biology": [
+        "Cell structure and function",
+        "Photosynthesis and plant growth",
+        "The human body: skeletal and muscular systems",
+        "Reproduction in plants and animals",
+        "Classification and biodiversity"
+      ],
+      "Chemistry": [
+        "Changing state, properties of matter",
+        "Separation techniques (evaporation, filtration, etc.)",
+        "Acids, bases and indicators",
+        "Reversible and irreversible changes"
+      ],
+      "Physics": [
+        "Types of forces and their effects",
+        "Electric circuits and conductors/insulators",
+        "Magnetism and magnets",
+        "Sound and vibration",
+        "Light and reflection/refraction"
+      ]
+    },
+    "english": {
+      "Reading": [
+        "Read a wide range of fiction and nonfiction texts",
+        "Retrieve information from texts",
+        "Infer character motives, feelings, and thoughts",
+        "Analyse language and structural features",
+        "Identify and compare themes, viewpoints and purposes"
+      ],
+      "Writing": [
+        "Write for a range of purposes and audiences",
+        "Edit and proofread own work",
+        "Organise content logically, using paragraphs and cohesive devices",
+        "Select vocabulary and grammar appropriate for effect",
+        "Punctuate sentences accurately",
+        "Use varied sentence structures for effect"
+      ],
+      "Speaking and listening": [
+        "Articulate and justify answers, arguments and opinions",
+        "Use spoken language to develop understanding through speculating, hypothesising, imagining and exploring ideas",
+        "Participate in discussions, presentations and performances"
+      ]
+    },
+    "humanities": {
+      "History": [
+        "Ancient civilisations and their impact",
+        "Timelines and chronology",
+        "Key figures and events from different periods"
+      ],
+      "Geography": [
+        "World continents, countries, and capitals",
+        "Climate zones and weather",
+        "Landforms and map skills"
+      ],
+      "Global Perspectives": [
+        "Cultural similarities and differences",
+        "Sustainable living and environment",
+        "Personal, local and global issues"
+      ]
+    }
+  }
+}

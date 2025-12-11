@@ -1,0 +1,105 @@
+{
+  "grade 8": {
+    "mathematics": {
+      "Number": [
+        "Understand and use ordering of real numbers",
+        "Calculate squares, cubes and roots",
+        "Estimate and round numbers in calculations",
+        "Work with ratios, rates, proportions and percent",
+        "Solve problems involving fractions, decimals, and percentages",
+        "Work with powers and exponents"
+      ],
+      "Algebra": [
+        "Simplify algebraic expressions",
+        "Solve linear equations and inequalities",
+        "Factorise expressions",
+        "Work with sequences and patterns",
+        "Plot and interpret linear graphs"
+      ],
+      "Geometry": [
+        "Explore properties of polygons and polyhedra",
+        "Calculate angles in geometric figures",
+        "Construct shapes and nets",
+        "Transformations: rotation, reflection, translation, enlargement",
+        "Locate points using coordinates"
+      ],
+      "Statistics": [
+        "Collect, represent and interpret data",
+        "Calculate mean, median, mode, and range",
+        "Create and analyse frequency tables and histograms",
+        "Apply probability to predict and analyse events"
+      ],
+      "Measurement": [
+        "Solve practical problems involving length, mass and volume",
+        "Calculate area, perimeter, and volume of regular and compound shapes",
+        "Convert measurement units",
+        "Measure and estimate in real-world contexts"
+      ]
+    },
+    "science": {
+      "Biology": [
+        "Cell theory and microscopy",
+        "Photosynthesis and plant structures",
+        "Human health: nutrition, disease, body systems",
+        "Ecological interactions and adaptation"
+      ],
+      "Chemistry": [
+        "Atoms, molecules and chemical reactions",
+        "Periodic Table and element properties",
+        "Acids and alkalis, neutralisation",
+        "Simple chemical formulae and equations"
+      ],
+      "Physics": [
+        "Motion and forces in everyday life",
+        "Heat and thermal energy",
+        "Electricity, circuits, and components",
+        "Wave phenomena: sound and light"
+      ],
+      "Earth & Space": [
+        "Earth’s structure and geology",
+        "Weathering, erosion, and the rock cycle"
+      ],
+      "Scientific enquiry": [
+        "Develop and use hypotheses",
+        "Test predictions and design fair experiments",
+        "Analyse patterns in data",
+        "Write detailed scientific reports"
+      ]
+    },
+    "english": {
+      "Reading": [
+        "Analyse text for explicit and implicit meaning",
+        "Compare texts and media",
+        "Explore author’s style and viewpoint",
+        "Evaluate structure and literary techniques"
+      ],
+      "Writing": [
+        "Write for different audiences and purposes (narrative, persuasive, informative)",
+        "Plan, structure and present coherent written work",
+        "Use varied language and stylistic devices",
+        "Edit and proofread effectively"
+      ],
+      "Speaking and listening": [
+        "Collaborate in group discussions",
+        "Prepare and deliver speeches",
+        "Listen critically and respond appropriately"
+      ]
+    },
+    "humanities": {
+      "History": [
+        "Industrialisation and its impact",
+        "Change and continuity in societies",
+        "Major conflicts and resolutions"
+      ],
+      "Geography": [
+        "Economic geography: industries, resources, trade",
+        "Environmental geography: sustainability, pollution"
+      ],
+      "Global Perspectives": [
+        "Ethical questions and dilemmas",
+        "Role of individuals and groups in society",
+        "Examine current global issues"
+      ]
+    }
+  }
+}

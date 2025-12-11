@@ -5,6 +5,9 @@ from app.api.v1.api import api_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
+    docs_url="/docs",          # 👈 add this
+    redoc_url="/redoc",        # 👈 add this
+    redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js",
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 

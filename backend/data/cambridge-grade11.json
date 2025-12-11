@@ -1,0 +1,75 @@
+{
+    "grade 11": {
+    "mathematics": {
+      "Pure Mathematics": [
+        "Advanced algebra, equations and functions",
+        "Differentiation and integration basics",
+        "Trigonometric functions and identities",
+        "Vectors and matrices"
+      ],
+      "Statistics": [
+        "Probability distributions",
+        "Hypothesis testing",
+        "Collect, interpret and present statistical data"
+      ],
+      "Mechanics": [
+        "Kinematics and dynamics",
+        "Forces, energy and motion",
+        "Problem-solving using mathematical models"
+      ]
+    },
+    "science": {
+      "Biology": [
+        "Biochemistry and metabolism",
+        "DNA, genes and protein synthesis",
+        "Plant and animal physiology",
+        "Ecology and conservation"
+      ],
+      "Chemistry": [
+        "Atomic structure and bonding",
+        "Energetics and kinetics",
+        "Acids, bases and equilibrium",
+        "Organic chemistry basics"
+      ],
+      "Physics": [
+        "Mechanics: motion and forces",
+        "Waves and oscillations",
+        "Electricity and magnetism",
+        "Thermal physics"
+      ]
+    },
+    "english": {
+      "Reading": [
+        "Analyse texts for meaning, style and context",
+        "Compare literary forms: prose, poetry, drama",
+        "Evaluate argument and rhetoric"
+      ],
+      "Writing": [
+        "Write critical, comparative and interpretive essays",
+        "Research and document findings",
+        "Develop an effective writing style"
+      ],
+      "Speaking and listening": [
+        "Thesis presentation",
+        "Panel and group discussion",
+        "Speech delivery and persuasion"
+      ]
+    },
+    "humanities": {
+      "History": [
+        "In-depth study of historical periods",
+        "Thematic studies (war, society, technology)",
+        "Historiography and methodological analysis"
+      ],
+      "Geography": [
+        "Physical geography: climate change, tectonics",
+        "Human geography: globalisation, development"
+      ],
+      "Global Perspectives": [
+        "Stakeholder analysis",
+        "International research projects",
+        "Critical thinking and evaluation"
+      ]
+    }
+  }
+}

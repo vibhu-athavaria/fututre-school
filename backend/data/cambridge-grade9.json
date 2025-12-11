@@ -1,0 +1,89 @@
+{
+  "grade 9": {
+    "mathematics": {
+      "Number": [
+        "Standard form and scientific notation",
+        "Surds and indices",
+        "Percent increase and decrease",
+        "Order of operations in complex expressions"
+      ],
+      "Algebra": [
+        "Quadratic equations and graphs",
+        "Simultaneous linear equations",
+        "Inequalities with one variable",
+        "Function notation and application"
+      ],
+      "Geometry": [
+        "Circle theorems",
+        "Properties of triangles and polygons",
+        "Proof and reasoning in geometry",
+        "Trigonometric ratios and applications"
+      ],
+      "Statistics": [
+        "Scatter diagrams and correlation",
+        "Probability distributions",
+        "Interpret cumulative frequency curves",
+        "Advanced data analysis"
+      ]
+    },
+    "science": {
+      "Biology": [
+        "Cell division and reproduction",
+        "Genetics and inheritance",
+        "Adaptation and evolution",
+        "Ecosystems and sustainability"
+      ],
+      "Chemistry": [
+        "Bonding (ionic, covalent, metallic)",
+        "Chemical changes and rates of reaction",
+        "Acids, bases, and salts",
+        "Periodic Table trends"
+      ],
+      "Physics": [
+        "Work, energy and power",
+        "Waves (sound, light, EM spectrum)",
+        "Electricity and magnetism advanced",
+        "Atomic and nuclear physics basics"
+      ],
+      "Earth & Space": [
+        "Climate change and its evidence",
+        "Renewable and non-renewable resources"
+      ]
+    },
+    "english": {
+      "Reading": [
+        "Interpret and compare complex literary texts",
+        "Analyse themes, symbolism, and context",
+        "Critique style and structure",
+        "Draw connections across multiple texts"
+      ],
+      "Writing": [
+        "Construct well-argued essays",
+        "Analyse and respond to texts through writing",
+        "Use stylistic and rhetorical devices",
+        "Proof and polish extended written pieces"
+      ],
+      "Speaking and listening": [
+        "Debate controversial subjects",
+        "Deliver persuasive and analytical presentations",
+        "Participate actively in group interaction"
+      ]
+    },
+    "humanities": {
+      "History": [
+        "Twentieth-century world history",
+        "Revolutions and social change",
+        "Political ideologies and their effects"
+      ],
+      "Geography": [
+        "Population trends and migration",
+        "Environmental management and climate hazards"
+      ],
+      "Global Perspectives": [
+        "Critical evaluation of sources",
+        "Global systems in practice",
+        "Participate in research and project presentations"
+      ]
+    }
+  }
+}
