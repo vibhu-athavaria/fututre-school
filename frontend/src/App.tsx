@@ -17,9 +17,8 @@ import { StudyPlan } from './pages/StudyPlan';
 import { StudentProgress } from './pages/StudentProgress';
 import AssessmentPage from './pages/AssessmentPage';
 import { EditChild } from './pages/EditChild';
-// import  MicroCoursePage from './pages/MicroCourse/index';
 import MicroCoursePage from './pages/MicroCoursePage';
-
+import AssessmentDiagnosticSummary from './pages/AssessmentDiagnosticSummary';
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
@@ -85,6 +84,14 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
+            path="/child-dashboard/assessment-diagnostic-report"
+            element={
+              <ProtectedRoute>
+                {user?.role === 'student' ? <AssessmentDiagnosticSummary /> : <Navigate to="/dashboard" />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/ai-tutor"
             element={
               <ProtectedRoute>
@@ -109,7 +116,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/take-micro-course"
+            path="/child-dashboard/take-micro-course"
             element={
               <ProtectedRoute>
                 {user?.role === 'student' ? <MicroCoursePage

@@ -44,3 +44,5 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   loading: boolean;
 }
+
+export type UserRole = "parent" | "child" | "teacher";

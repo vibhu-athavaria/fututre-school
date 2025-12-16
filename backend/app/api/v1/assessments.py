@@ -235,6 +235,8 @@ def get_assessment_report(
     # If not completed → return a minimal response
     if assessment.status != "completed":
         return {
+            "subject": assessment.subject,
+            "assessment_id": assessment.id,
             "completed": False,
             "assessment_report": None,
             "diagnostic_summary": None,
@@ -269,6 +271,8 @@ def get_assessment_report(
     # Final response matching your React UI
     return {
         "completed": True,
+        "subject": assessment.subject,
+        "assessment_id": assessment.id,
         "assessment_report": {
             "score": score,
             "total": total,

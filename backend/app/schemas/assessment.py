@@ -125,5 +125,7 @@ class AssessmentReportSchema(BaseModel):
 
 class AssessmentReportResponse(BaseModel):
     completed: bool
+    subject: str
+    assessment_id: int
     assessment_report: Optional[AssessmentReportSchema]
     diagnostic_summary: Optional[str]

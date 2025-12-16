@@ -1,8 +1,9 @@
 // src/components/Assessment/AssessmentPage.tsx
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import config from "../config";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
 axios.defaults.baseURL = config.backendUrl;
 type QuestionBank = {
@@ -205,10 +206,11 @@ const AssessmentPage: React.FC = () => {
     return <div className="p-6">No question loaded</div>;
   }
 
-  // ✅ Main question UI
+  // Main question UI
   return (
     <div className="min-h-screen p-6 bg-gray-50">
       <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow">
+        <Breadcrumb role="child" items={[{ label: `${subject} Assessment` }]} />
         <div className="text-sm text-gray-500">
           {subject} • Question {question.question_number} • {question.question_bank.difficulty_label}
         </div>
