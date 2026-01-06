@@ -5,8 +5,8 @@ from app.api.v1.api import api_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    docs_url="/docs",          # 👈 add this
-    redoc_url="/redoc",        # 👈 add this
+    docs_url="/docs",
+    redoc_url="/redoc",
     redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js",
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
@@ -24,7 +24,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
-    return {"message": "Future School Platform API"}
+    return {"message": "Kaihle Platform API"}
 
 @app.get("/health")
 async def health_check():

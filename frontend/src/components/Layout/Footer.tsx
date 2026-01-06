@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
               <div>
-                <span className="text-2xl font-bold text-white">Future School</span>
+                <span className="text-2xl font-bold text-white">Kaihle</span>
                 <div className="text-sm text-blue-200">Personalized Learning for Every Child</div>
               </div>
             </div>
@@ -126,7 +126,7 @@ export const Footer: React.FC = () => {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2 text-gray-300">
-            <span>© {currentYear} Future School. All rights reserved.</span>
+            <span>© {currentYear} Kaihle. All rights reserved.</span>
           </div>
           <div className="flex items-center gap-1 text-gray-300">
             <span>Made with</span>

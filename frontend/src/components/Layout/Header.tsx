@@ -41,7 +41,7 @@ const { user, signOut } = useAuth();
               </div>
             </div>
             <div>
-              <span className="text-xl font-bold text-white">Future School</span>
+              <span className="text-xl font-bold text-white">Kaihle</span>
               <div className="text-xs text-blue-100 -mt-1">Learn. Grow. Succeed.</div>
             </div>
           </a>

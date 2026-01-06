@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     # API
     API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Future School Backend"
+    PROJECT_NAME: str = "Kaihle Backend"
 
     # CORS
     BACKEND_CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:5173"]

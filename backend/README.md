@@ -1,6 +1,6 @@
-# Future School Platform Backend
+# Kaihle Platform Backend
 
-A comprehensive FastAPI backend for a Future School platform with user authentication, student progress tracking, lesson management, AI tutor integration, and community features.
+A comprehensive FastAPI backend for a Kaihle platform with user authentication, student progress tracking, lesson management, AI tutor integration, and community features.
 
 ## Features
 

@@ -127,7 +127,7 @@ export const Home: React.FC = () => {
             </h1>
 
             <p className="text-xl md:text-2xl text-blue-100 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Future School makes learning fun for students ages <strong className="text-white">7-14</strong> with
+              Kaihle makes learning fun for students ages <strong className="text-white">7-14</strong> with
               personalized lessons, engaging videos, and smart assessments.
             </p>
 
@@ -246,7 +246,7 @@ export const Home: React.FC = () => {
               <span className="text-purple-600 font-semibold">Simple Process</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              How Future School Works
+              How Kaihle Works
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Get started in minutes and watch your child thrive
@@ -369,7 +369,7 @@ export const Home: React.FC = () => {
             Ready to Transform Your Child&apos;s Learning?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of families already learning smarter with Future School.
+            Join thousands of families already learning smarter with Kaihle.
             Start your free trial today – no credit card required!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
