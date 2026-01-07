@@ -1,131 +1,165 @@
-# Kaihle  
-**AI-powered learning infrastructure for schools and families**
+# Kaihle
+
+Kaihle is an **AI-powered, full-stack product prototype** focused on using LLMs to assist with structured thinking, reflection, and decision-making. The project demonstrates how to build **reliable, production-oriented AI features** on top of a modern web stack, with a strong emphasis on backend architecture, prompt design, and system correctness.
+
+This repository is intentionally designed as a **realistic product codebase**, not a demo script, showcasing full-stack engineering, API design, and practical LLM integration.
 
 ---
 
-## Overview
+## What This Project Demonstrates
 
-Kaihle is an AI-driven learning platform that helps schools deliver **personalized, curriculum-aligned education** while reducing teacher workload.
-
-Kaihle handles curriculum structuring, adaptive learning paths, and continuous assessment so that **teachers can focus on mentorship** and schools can spend more time on life skills, creativity, and real-world learning.
-
-The platform can be used by:
-- **Schools** (as a core learning engine for teachers)
-- **Parents/Families** (as a guided learning system with mentor oversight)
-
----
-
-## The Problem
-
-Modern education struggles with:
-- Heavy teacher workload from lesson planning
-- One-size-fits-all pacing for diverse learners
-- Limited time for life skills and experiential learning
-- Fragmented tools that don’t adapt to individual students
-
-Existing LMSs manage content, but they do not **personalize learning at scale**.
-
----
-
-## What Kaihle Does
-
-Kaihle acts as a **learning engine** underneath a school or home learning environment.
-
-### Core capabilities:
-- Generates **curriculum-aligned learning paths** based on:
-  - Academic standards (CBSE, IB, IGCSE, etc.)
-  - Student learning style and interests
-  - Ongoing progress and mastery
-
-- Breaks curriculum into:
-  - Micro-concepts
-  - Adaptive exercises
-  - Continuous formative assessments
-
-- Dynamically adjusts difficulty, pace, and sequencing
-
-- Provides teachers with **mentor dashboards** showing:
-  - Student progress
-  - Learning gaps
-  - Intervention opportunities
-
-Teachers guide and coach.  
-Kaihle handles structure and personalization.
-
----
-
-## Design Principles
-
-- **Teachers are mentors, not content creators**
-- **AI stays invisible** (learning paths, not algorithms)
-- **Learning should take less time, not more**
-- **Human judgment always overrides automation**
+* End-to-end **full-stack development** (frontend + backend)
+* **LLM-powered product features** integrated into real application flows
+* Backend-first architecture with clear API boundaries
+* Practical AI patterns: prompt iteration, RAG-style retrieval, structured outputs
+* Production-minded concerns: cost awareness, reliability, and extensibility
 
 ---
 
 ## High-Level Architecture
 
-Frontend (React + Vite)
-|
-Backend API (FastAPI)
-|
-AI Layer (LLM + rules)
-|
-Database (PostgreSQL / Supabase)
+```
+Frontend (React / TypeScript)
+        ↓
+Backend APIs (Python / FastAPI)
+        ↓
+Business Logic & AI Layer
+        ↓
+LLM APIs + Data Stores (Postgres / Supabase)
+```
 
+* **Frontend** focuses on user interaction and product workflows
+* **Backend** owns business logic, orchestration, and AI integration
+* **AI layer** encapsulates prompt logic, context assembly, and response validation
 
+---
 
-## Technology Stack
+## Tech Stack
 
 ### Frontend
-- React
-- TypeScript
-- Vite
+
+* React
+* TypeScript
+* Modern component-based UI
+* API-driven architecture
 
 ### Backend
-- Python
-- FastAPI
-- REST + streaming APIs
 
-### AI Layer
-- LLMs (local or hosted via Ollama)
-- Prompt templates + structured prompting
-- Validation and deterministic logic on top of LLM output
+* Python
+* FastAPI
+* REST APIs
+* Environment-based configuration
 
-### Database & Auth
-- PostgreSQL
-- Supabase (auth, storage, database)
+### Data & Infrastructure
 
----
+* PostgreSQL (via Supabase)
+* SQL-based data modeling
+* Cloud-ready deployment patterns
 
-## Key Modules
+### AI / LLM Features
 
-- **Curriculum Engine** – maps standards to concepts and learning units  
-- **Adaptive Learning Engine** – adjusts pacing and difficulty per student  
-- **Assessment System** – diagnostic and formative assessments  
-- **Mentor Dashboard** – progress insights and intervention tools  
-- **Parent View** – simple, outcome-focused progress tracking  
+* LLM-powered responses integrated into backend services
+* Prompt design and iteration handled server-side
+* Retrieval-Augmented Generation (RAG-style) using structured data and documents
+* Structured outputs (JSON/schema-driven where applicable)
+* Cost-aware usage and response evaluation considerations
 
 ---
 
-## What Kaihle Is Not
+## Getting Started
 
-- ❌ Not a content marketplace  
-- ❌ Not a traditional LMS  
-- ❌ Not a teacher-replacement system  
+### Prerequisites
 
-Kaihle is **infrastructure**, not a shortcut.
-
----
-
-## Status
-
-- Actively under development
-- Architecture-first approach
-- Open to contributors interested in education, AI systems, and human-centered design
+* Python 3.10+
+* Node.js 18+
+* npm or yarn
+* An LLM API key (e.g. OpenAI)
 
 ---
 
-## Vision
+### Backend Setup
 
-Kaihle aims to become the **default learning engine behind modern schools** — quietly improving learning while keeping humans at the center.
+```bash
+# Clone the repository
+git clone https://github.com/vibhu-athavaria/kaihle.git
+cd kaihle/backend
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment variables
+cp .env.example .env
+# Add required values (LLM API key, database URL, etc.)
+
+# Run the backend server
+uvicorn main:app --reload
+```
+
+Backend will be available at:
+
+```
+http://localhost:8000
+```
+
+Detailed backend-specific notes live in:
+`/backend/README.md`
+
+---
+
+### Frontend Setup
+
+```bash
+cd ../frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+Frontend will typically be available at:
+
+```
+http://localhost:5173
+```
+
+---
+
+## AI Design Notes
+
+This project intentionally treats AI as **product infrastructure**, not a black box:
+
+* Prompts are designed, versioned, and iterated as part of the backend
+* Context is assembled explicitly to avoid uncontrolled hallucination
+* Outputs are validated before being surfaced to users
+* The system is designed to support:
+
+  * Prompt refinement
+  * Evaluation and testing
+  * Cost and latency optimization
+
+These patterns are representative of how LLMs are used in **real production products**, not demos.
+
+---
+
+## Why This Repo Is Shared
+
+This repository is shared as a **code portfolio example** to demonstrate:
+
+* Senior-level backend and full-stack engineering
+* Practical, production-minded AI/LLM integration
+* Clear system design and ownership of complexity
+* Ability to translate product ideas into working software
+
+It is **not** intended as a polished open-source framework, but as a realistic snapshot of how an AI-enabled product is built and evolved.
+
+---
+
+## License
+
+MIT (or project-specific license if applicable)
