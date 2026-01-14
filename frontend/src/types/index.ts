@@ -1,7 +1,11 @@
 export interface User {
   id: string;
   email: string;
+  username: string;
+  full_name: string;
+  role: string;
   created_at: string;
+  has_completed_assessment?: boolean;
 }
 
 export interface Child {

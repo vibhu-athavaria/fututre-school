@@ -21,34 +21,24 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true)
 
   // -----------------------------
-  // AUTH CHECK (token + user data)
+  // AUTH CHECK (use AuthContext instead of localStorage)
   // -----------------------------
   useEffect(() => {
-    const token = localStorage.getItem("access_token")
-    const localUser = localStorage.getItem("user")
-
-    // No token → force login
-    if (!token || !localUser) {
-      console.error("Missing token or user. Redirecting.")
+    // Since this route is already protected by ProtectedRoute,
+    // we can trust the AuthContext user data
+    if (!user) {
+      console.warn("No user in AuthContext. Redirecting.")
       window.location.href = "/parent-login"
       return
     }
 
-    // Parse user and check role
-    try {
-      const parsedUser = JSON.parse(localUser)
-
-      if (!parsedUser?.role || parsedUser.role.toLowerCase() !== "parent") {
-        console.error("User is not a parent")
-        window.location.href = "/parent-login"
-        return
-      }
-    } catch (err) {
-      console.error("Invalid user JSON")
+    // Check if user has parent role
+    if (user.role !== "parent") {
+      console.warn("User is not a parent. Redirecting.")
       window.location.href = "/parent-login"
       return
     }
-  }, [])
+  }, [user])
 
   // -----------------------------
   // FETCH CHILDREN
@@ -56,14 +46,8 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchChildren = async () => {
       try {
-        const token = localStorage.getItem("access_token")
-        if (!token) return window.location.href = "/parent-login"
-
-        const res = await axios.get("/api/v1/users/me/students", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        // Use the token from axios defaults (set by AuthContext)
+        const res = await axios.get("/api/v1/users/me/students")
 
         const mappedChildren = res.data.map((child: any) => ({
           id: child.id.toString(),

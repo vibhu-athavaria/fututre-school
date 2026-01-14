@@ -19,13 +19,14 @@ import AssessmentPage from './pages/AssessmentPage';
 import { EditChild } from './pages/EditChild';
 import MicroCoursePage from './pages/MicroCoursePage';
 import AssessmentDiagnosticSummary from './pages/AssessmentDiagnosticSummary';
+import { ParentSettings } from './pages/ParentSettings';
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
 
   // ✅ Decide where to redirect based on role
   const getDefaultDashboard = () => {
-    if (!user) return '/';
+    if (!user || !user.role) return '/';
     return user.role === 'parent' ? '/dashboard' : '/child-dashboard';
   };
 
@@ -37,8 +38,8 @@ const AppContent: React.FC = () => {
           {/* Public Routes */}
           <Route path="/" element={user ? <Navigate to={getDefaultDashboard()} /> : <Home />} />
           <Route path="/signup" element={user ? <Navigate to={getDefaultDashboard()} /> : <SignUp />} />
-          <Route path="/parent-login" element={user ? <Navigate to={getDefaultDashboard()} /> : <ParentLogin />} />
-          <Route path="/student-login" element={user ? <Navigate to={getDefaultDashboard()} /> : <StudentLogin />} />
+          <Route path="/parent-login" element={!user ? <ParentLogin /> : <Navigate to={getDefaultDashboard()} />} />
+          <Route path="/student-login" element={!user ? <StudentLogin /> : <Navigate to={getDefaultDashboard()} />} />
 
           {/* Parent-only Routes */}
           <Route
@@ -61,7 +62,23 @@ const AppContent: React.FC = () => {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                {user?.role === 'parent' ? <Dashboard /> : <Navigate to="/child-dashboard" />}
+                {user?.role === 'parent' ? <Dashboard /> : <Navigate to="/" />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/parent-settings"
+            element={
+              <ProtectedRoute>
+                {user?.role === 'parent' ? <ParentSettings /> : <Navigate to="/" />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/children"
+            element={
+              <ProtectedRoute>
+                {user?.role === 'parent' ? <AddChild /> : <Navigate to="/" />}
               </ProtectedRoute>
             }
           />

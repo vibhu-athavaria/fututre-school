@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import config from '../config';
 import { GRADES }  from '../lib/utils';
+import { Breadcrumb } from '../components/ui/Breadcrumb';
+import { Users } from 'lucide-react';
 
 axios.defaults.baseURL = config.backendUrl;
 
@@ -51,8 +53,11 @@ export const AddChild: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-blue-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full mx-auto">
+        <div className="mb-6">
+          <Breadcrumb role="parent" items={[{ label: 'Add Child', icon: Users }]} />
+        </div>
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
