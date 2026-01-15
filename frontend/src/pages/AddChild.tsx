@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
-import config from '../config';
+import { http } from "@/lib/http";
 import { GRADES }  from '../lib/utils';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { Users } from 'lucide-react';
 
-axios.defaults.baseURL = config.backendUrl;
+
 
 interface AddChildForm {
   full_name: string;
@@ -28,7 +27,7 @@ export const AddChild: React.FC = () => {
     try {
 
       // 2. Proceed with creating child if username available
-      const response = await axios.post('/api/v1/users/me/students', {
+      const response = await http.post('/api/v1/users/me/students', {
         name: data.full_name,
         age: data.age,
         grade_level: data.grade,

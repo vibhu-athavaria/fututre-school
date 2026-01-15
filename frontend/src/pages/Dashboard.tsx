@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "../contexts/AuthContext"
-import axios from "axios"
+import { http } from "@/lib/http"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -20,25 +20,6 @@ export const Dashboard: React.FC = () => {
   const [children, setChildren] = useState<Child[]>([])
   const [loading, setLoading] = useState(true)
 
-  // -----------------------------
-  // AUTH CHECK (use AuthContext instead of localStorage)
-  // -----------------------------
-  useEffect(() => {
-    // Since this route is already protected by ProtectedRoute,
-    // we can trust the AuthContext user data
-    if (!user) {
-      console.warn("No user in AuthContext. Redirecting.")
-      window.location.href = "/parent-login"
-      return
-    }
-
-    // Check if user has parent role
-    if (user.role !== "parent") {
-      console.warn("User is not a parent. Redirecting.")
-      window.location.href = "/parent-login"
-      return
-    }
-  }, [user])
 
   // -----------------------------
   // FETCH CHILDREN
@@ -47,7 +28,7 @@ export const Dashboard: React.FC = () => {
     const fetchChildren = async () => {
       try {
         // Use the token from axios defaults (set by AuthContext)
-        const res = await axios.get("/api/v1/users/me/students")
+        const res = await http.get("/api/v1/users/me/students")
 
         const mappedChildren = res.data.map((child: any) => ({
           id: child.id.toString(),

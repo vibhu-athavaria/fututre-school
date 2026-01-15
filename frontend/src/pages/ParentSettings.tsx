@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import config from '../config';
+import { http } from '@/lib/http';
 import { useAuth } from '../contexts/AuthContext';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { Settings, CreditCard, Users } from 'lucide-react';
 
-axios.defaults.baseURL = config.backendUrl;
 
 interface BillingInfo {
   id: number;
@@ -68,21 +66,15 @@ export const ParentSettings: React.FC = () => {
         }
 
         // Fetch billing information
-        const billingResponse = await axios.get('/api/v1/billing/billing-info', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const billingResponse = await http.get('/api/v1/billing/billing-info');
         setBillingInfo(billingResponse.data);
 
         // Fetch subscriptions
-        const subscriptionsResponse = await axios.get('/api/v1/billing/subscriptions', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const subscriptionsResponse = await http.get('/api/v1/billing/subscriptions');
         setSubscriptions(subscriptionsResponse.data);
 
         // Fetch billing summary
-        const summaryResponse = await axios.get('/api/v1/billing/summary', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const summaryResponse = await http.get('/api/v1/billing/summary');
         setBillingSummary(summaryResponse.data);
 
       } catch (err) {
@@ -117,14 +109,10 @@ export const ParentSettings: React.FC = () => {
         is_default: newPaymentMethod.is_default
       };
 
-      await axios.post('/api/v1/billing/billing-info', newMethod, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await http.post('/api/v1/billing/billing-info', newMethod);
 
       // Refresh billing data
-      const billingResponse = await axios.get('/api/v1/billing/billing-info', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const billingResponse = await http.get('/api/v1/billing/billing-info');
       setBillingInfo(billingResponse.data);
 
       setShowAddPaymentMethod(false);
@@ -153,14 +141,12 @@ export const ParentSettings: React.FC = () => {
       const confirmCancel = window.confirm('Are you sure you want to cancel this subscription?');
       if (!confirmCancel) return;
 
-      await axios.delete(`/api/v1/billing/subscriptions/${subscriptionId}`, {
+      await http.delete(`/api/v1/billing/subscriptions/${subscriptionId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       // Refresh subscriptions
-      const subscriptionsResponse = await axios.get('/api/v1/billing/subscriptions', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const subscriptionsResponse = await http.get('/api/v1/billing/subscriptions');
       setSubscriptions(subscriptionsResponse.data);
 
     } catch (err) {
@@ -178,9 +164,7 @@ export const ParentSettings: React.FC = () => {
       }
 
       // Check if user has any children
-      const childrenResponse = await axios.get('/api/v1/users/me/students', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const childrenResponse = await http.get('/api/v1/users/me/students');
 
       if (childrenResponse.data.length === 0) {
         alert('Please add a child profile first to start a free trial');
@@ -191,21 +175,15 @@ export const ParentSettings: React.FC = () => {
       // Start free trial for the first child (in a real app, this would be more sophisticated)
       const studentId = childrenResponse.data[0].id;
 
-      await axios.post('/api/v1/billing/subscriptions/start-free-trial', {
+      await http.post('/api/v1/billing/subscriptions/start-free-trial', {
         student_id: studentId
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       // Refresh data
-      const subscriptionsResponse = await axios.get('/api/v1/billing/subscriptions', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const subscriptionsResponse = await http.get('/api/v1/billing/subscriptions');
       setSubscriptions(subscriptionsResponse.data);
 
-      const summaryResponse = await axios.get('/api/v1/billing/summary', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const summaryResponse = await http.get('/api/v1/billing/summary');
       setBillingSummary(summaryResponse.data);
 
     } catch (err) {

@@ -59,18 +59,18 @@ alembic/                 # Database migration files
 
 5. **Run Database Migrations**
    \`\`\`bash
-   ./venv/bin/python scripts/create_initial_migration.py
-   ./venv/bin/python scripts/run_migrations.py
+   python scripts/create_initial_migration.py
+   python scripts/run_migrations.py
    \`\`\`
 
 6. **Seed Initial Data**
    \`\`\`bash
-   ./venv/bin/python scripts/seed_initial_data.py
+   python scripts/seed_initial_data.py
    \`\`\`
 
 7. **Start the Server**
    \`\`\`bash
-   ./venv/bin/uvicorn app.main:app --reload
+   uvicorn app.main:app --reload
    \`\`\`
 
 ## API Documentation
@@ -152,7 +152,7 @@ The system includes comprehensive models for:
 
 Run tests with:
 \`\`\`bash
-./venv/bin/pytest
+pytest
 \`\`\`
 
 ## Contributing
