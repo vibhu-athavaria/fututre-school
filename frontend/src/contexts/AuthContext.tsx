@@ -100,7 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // ---------- LOGIN (Student) ----------
   const signInStudent = async (username: string, password: string) => {
-    return signInCommon(username, password, "student");
+    await signInCommon(username, password, "student");
+    return user;
   };
 
   // ---------- COMMON LOGIN HANDLER ----------

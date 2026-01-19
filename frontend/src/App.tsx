@@ -17,6 +17,7 @@ import { AddChild } from "./pages/AddChild";
 import { EditChild } from "./pages/EditChild";
 
 import { ChildDashboard } from "./pages/ChildDashboard";
+import { CompleteProfile } from "./pages/CompleteProfile";
 import { AITutor } from "./pages/AITutor";
 import { Lesson } from "./pages/Lesson";
 import { StudyPlan } from "./pages/StudyPlan";
@@ -96,6 +97,15 @@ const AppContent: React.FC = () => {
           />
 
           {/* ---------------- STUDENT ---------------- */}
+          <Route
+            path="/complete-profile"
+            element={
+              <ProtectedRoute role="student">
+                <CompleteProfile />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/child-dashboard"
             element={

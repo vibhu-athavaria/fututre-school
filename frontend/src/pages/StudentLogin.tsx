@@ -17,8 +17,12 @@ export const StudentLogin: React.FC = () => {
   const onSubmit = async (data: LoginForm) => {
     setError('');
     try {
-      await signInStudent(data.username, data.password);
-      navigate('/child-dashboard');
+      const user = await signInStudent(data.username, data.password);
+      if (user?.student_profile?.profile_completed) {
+        navigate('/child-dashboard');
+      } else {
+        navigate('/complete-profile');
+      }
     } catch (err) {
       setError('Invalid username or password.');
     }

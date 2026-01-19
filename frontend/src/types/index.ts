@@ -13,8 +13,12 @@ export interface User {
 export interface Child {
   id: string
   parent_id: string
-  age: number
-  grade: string
+  age: number | null
+  grade_level: string | null
+  interests: string[] | null
+  preferred_format: string | null
+  preferred_session_length: number | null
+  profile_completed: boolean
   user: {
     full_name: string
     username: string

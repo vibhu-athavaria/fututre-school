@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, validator
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from datetime import datetime
 from app.models.user import UserRole
 from app.schemas.assessment import AssessmentOut
@@ -79,6 +79,14 @@ class StudentProfileUpdate(BaseModel):
     age: Optional[int] = None
     grade_level: Optional[int] = None
     checkpoints: Optional[Dict[str, str]] = None
+    interests: Optional[List[str]] = None
+    preferred_format: Optional[str] = None
+    preferred_session_length: Optional[int] = None
+    profile_completed: Optional[bool] = None
+    interests: Optional[List[str]] = None
+    preferred_format: Optional[str] = None
+    preferred_session_length: Optional[int] = None
+    profile_completed: bool = False
 
 
 class StudentProfileResponse(BaseModel):
@@ -86,10 +94,21 @@ class StudentProfileResponse(BaseModel):
     parent_id: int
     age: Optional[int] = None
     grade_level: Optional[int] = None
+    interests: Optional[List[str]] = None
+    preferred_format: Optional[str] = None
+    preferred_session_length: Optional[int] = None
+    profile_completed: bool = False
     user: UserBase
 
     class Config:
         from_attributes = True
+
+
+class LearningProfileUpdate(BaseModel):
+    interests: Optional[List[str]] = None
+    preferred_format: Optional[str] = None
+    preferred_session_length: Optional[int] = None
+    profile_completed: Optional[bool] = None
 
 class AssessmentSubjectStatus(BaseModel):
     assessment_id: int
@@ -103,6 +122,10 @@ class StudentDetailResponse(BaseModel):
     parent_id: int
     age: Optional[int] = None
     grade_level: Optional[int] = None
+    interests: Optional[List[str]] = None
+    preferred_format: Optional[str] = None
+    preferred_session_length: Optional[int] = None
+    profile_completed: bool = False
     user: Optional[UserBase] = None
     assessments: Dict[str, AssessmentSubjectStatus]
 

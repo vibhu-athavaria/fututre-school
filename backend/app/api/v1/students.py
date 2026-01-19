@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_active_user
-from app.crud.student import get_student_by_parent_and_id, update_student, delete_student, get_student_with_assessments
-from app.schemas.user import StudentProfileUpdate, StudentProfileResponse, StudentDetailResponse
+from app.crud.student import get_student_by_parent_and_id, update_student, delete_student, get_student_with_assessments, update_learning_profile
+from app.schemas.user import StudentProfileUpdate, StudentProfileResponse, StudentDetailResponse, LearningProfileUpdate
 from app.models.user import User as UserModel, StudentProfile
 
 router = APIRouter()
@@ -50,6 +50,33 @@ def update_student_profile(
         )
 
     updated_student = update_student(db, student_id, student_update)
+    if not updated_student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return updated_student
+
+@router.patch("/{student_id}/learning-profile", response_model=StudentProfileResponse)
+def update_student_learning_profile(
+    student_id: int,
+    learning_update: LearningProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    """Update student learning profile"""
+    if current_user.role == "parent":
+        # Verify the student belongs to this parent
+        existing_student = get_student_by_parent_and_id(db, current_user.id, student_id)
+        if not existing_student:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Student not found or not authorized"
+            )
+    elif current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+
+    updated_student = update_learning_profile(db, student_id, learning_update)
     if not updated_student:
         raise HTTPException(status_code=404, detail="Student not found")
     return updated_student
