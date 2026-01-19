@@ -12,3 +12,31 @@ ASSESSMENT_STATUS_COMPLETED = "completed"
 ASSESSMENT_TYPES = ["diagnostic", "formative", "summative"]
 TOTAL_QUESTIONS_PER_ASSESSMENT = 20
 ASSESSMENT_MAX_QUESTIONS_PER_SUBTOPIC = 5
+
+# Learning Profile Constants
+INTEREST_CATEGORIES = [
+    "Science",
+    "Technology",
+    "Engineering",
+    "Mathematics",
+    "Arts",
+    "Sports",
+    "Music",
+    "Literature",
+    "History",
+    "Geography",
+    "Languages",
+    "Business",
+    "Health",
+    "Environment",
+    "Other"
+]
+
+PREFERRED_FORMATS = [
+    "Video",
+    "Text",
+    "Interactive",
+    "Audio"
+]
+
+PREFERRED_SESSION_LENGTHS = [15, 30, 45, 60]

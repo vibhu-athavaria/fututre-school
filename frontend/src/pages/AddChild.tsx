@@ -5,6 +5,7 @@ import { http } from "@/lib/http";
 import { GRADES }  from '../lib/utils';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { Users } from 'lucide-react';
+import LearningProfileForm from '../components/LearningProfileForm';
 
 
 
@@ -19,6 +20,8 @@ interface AddChildForm {
 export const AddChild: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [newChild, setNewChild] = useState<any>(null);
   const { register, handleSubmit, formState: { errors } } = useForm<AddChildForm>();
 
 
@@ -35,13 +38,9 @@ export const AddChild: React.FC = () => {
         password: data.password,
       });
 
-      const newChild = response.data;
-      const existingChildren = JSON.parse(localStorage.getItem('children') || '[]');
-      existingChildren.push(newChild);
-      localStorage.setItem('children', JSON.stringify(existingChildren));
-      localStorage.setItem('currentChild', JSON.stringify(newChild));
-
-      navigate('/dashboard');
+      const child = response.data;
+      setNewChild(child);
+      setShowProfileForm(true);
     } catch (err) {
       console.error('Failed to create child profile:', err);
       alert('Failed to create child profile. Please try again.');
@@ -50,6 +49,54 @@ export const AddChild: React.FC = () => {
     }
   };
 
+  const handleProfileSubmit = async (profileData: {
+    interests: string[];
+    preferred_format: string;
+    preferred_session_length: number;
+  }) => {
+    try {
+      await http.patch(`/api/v1/students/${newChild.id}/learning-profile`, {
+        ...profileData,
+        profile_completed: true
+      });
+      // Update local storage
+      const existingChildren = JSON.parse(localStorage.getItem('children') || '[]');
+      const updatedChild = { ...newChild, ...profileData, profile_completed: true };
+      const updatedChildren = existingChildren.map((c: any) => c.id === newChild.id ? updatedChild : c);
+      localStorage.setItem('children', JSON.stringify(updatedChildren));
+      localStorage.setItem('currentChild', JSON.stringify(updatedChild));
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Failed to save learning profile:', err);
+      alert('Failed to save learning profile. Please try again.');
+    }
+  };
+
+  const handleProfileSkip = () => {
+    // Update local storage
+    const existingChildren = JSON.parse(localStorage.getItem('children') || '[]');
+    existingChildren.push(newChild);
+    localStorage.setItem('children', JSON.stringify(existingChildren));
+    localStorage.setItem('currentChild', JSON.stringify(newChild));
+    navigate('/dashboard');
+  };
+
+
+  if (showProfileForm && newChild) {
+    return (
+      <div className="min-h-screen bg-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl w-full mx-auto">
+          <div className="mb-6">
+            <Breadcrumb role="parent" items={[{ label: 'Add Child', icon: Users }, { label: 'Learning Profile' }]} />
+          </div>
+          <LearningProfileForm
+            onSubmit={handleProfileSubmit}
+            onSkip={handleProfileSkip}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-blue-50 py-12 px-4 sm:px-6 lg:px-8">

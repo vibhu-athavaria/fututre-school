@@ -2,7 +2,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, selectinload
 from app.models.user import StudentProfile, User
 from app.models.assessment import Assessment
-from app.schemas.user import StudentProfileUpdate
+from app.schemas.user import StudentProfileUpdate, LearningProfileUpdate
 from typing import Optional
 from app.core.security import verify_password, get_password_hash
 
@@ -79,10 +79,36 @@ def update_student(db: Session, student_id: int, updates: StudentProfileUpdate) 
         db_student_profile.math_checkpoint = updates.checkpoints.get("math")
         db_student_profile.science_checkpoint = updates.checkpoints.get("science")
         db_student_profile.english_checkpoint = updates.checkpoints.get("english")
+    if updates.interests is not None:
+        db_student_profile.interests = updates.interests
+    if updates.preferred_format is not None:
+        db_student_profile.preferred_format = updates.preferred_format
+    if updates.preferred_session_length is not None:
+        db_student_profile.preferred_session_length = updates.preferred_session_length
+    if updates.profile_completed is not None:
+        db_student_profile.profile_completed = updates.profile_completed
 
     db.commit()
     db.refresh(db_student_profile)
 
+    return db_student_profile
+
+def update_learning_profile(db: Session, student_id: int, updates: LearningProfileUpdate) -> StudentProfile | None:
+    db_student_profile = db.query(StudentProfile).filter(StudentProfile.id == student_id).first()
+    if not db_student_profile:
+        return None
+
+    if updates.interests is not None:
+        db_student_profile.interests = updates.interests
+    if updates.preferred_format is not None:
+        db_student_profile.preferred_format = updates.preferred_format
+    if updates.preferred_session_length is not None:
+        db_student_profile.preferred_session_length = updates.preferred_session_length
+    if updates.profile_completed is not None:
+        db_student_profile.profile_completed = updates.profile_completed
+
+    db.commit()
+    db.refresh(db_student_profile)
     return db_student_profile
 
 def delete_student(db: Session, student_id: int) -> bool:

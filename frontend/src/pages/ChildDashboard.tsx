@@ -97,6 +97,10 @@ export const ChildDashboard: React.FC = () => {
   /* ---------------------------------- */
 
   useEffect(() => {
+    if (!user?.student_profile?.profile_completed) {
+      navigate('/complete-profile');
+      return;
+    }
     if (!user?.student_profile?.id) return;
 
     const fetchStudent = async () => {
@@ -111,7 +115,7 @@ export const ChildDashboard: React.FC = () => {
     };
 
     fetchStudent();
-  }, [user]);
+  }, [user, navigate]);
 
   if (!child) return null;
 

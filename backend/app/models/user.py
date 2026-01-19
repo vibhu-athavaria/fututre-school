@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -63,6 +63,10 @@ class StudentProfile(Base, SerializerMixin):
     math_checkpoint = Column(String, nullable=True)
     science_checkpoint = Column(String, nullable=True)
     english_checkpoint = Column(String, nullable=True)
+    interests = Column(JSON, nullable=True)
+    preferred_format = Column(String, nullable=True)
+    preferred_session_length = Column(Integer, nullable=True)
+    profile_completed = Column(Boolean, default=False)
 
     # --- Relationships ---
     user = relationship(
