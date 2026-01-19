@@ -61,8 +61,9 @@ class TestCurriculumImport(unittest.TestCase):
 
     def test_get_or_create_existing_record(self):
         """Test get_or_create returns existing record ID"""
-        # Mock existing record
-        self.mock_cur.fetchone.return_value = (1,)
+        # Mock existing record: INSERT conflicts, so first fetchone returns None,
+        # then SELECT returns the existing record
+        self.mock_cur.fetchone.side_effect = [None, (1,)]
 
         result = get_or_create(
             self.mock_cur,
@@ -72,12 +73,13 @@ class TestCurriculumImport(unittest.TestCase):
         )
 
         self.assertEqual(result, 1)
-        self.mock_cur.execute.assert_called()
+        # Verify both INSERT and SELECT were called
+        self.assertEqual(self.mock_cur.execute.call_count, 2)
 
     def test_get_or_create_new_record(self):
         """Test get_or_create creates new record and returns ID"""
-        # Mock no existing record, then successful insert
-        self.mock_cur.fetchone.side_effect = [None, (2,)]
+        # Mock successful insert: INSERT succeeds, fetchone returns new ID
+        self.mock_cur.fetchone.return_value = (2,)
 
         result = get_or_create(
             self.mock_cur,
@@ -87,14 +89,15 @@ class TestCurriculumImport(unittest.TestCase):
         )
 
         self.assertEqual(result, 2)
-        # Verify INSERT was called with correct parameters
+        # Verify only INSERT was called (no SELECT needed)
+        self.assertEqual(self.mock_cur.execute.call_count, 1)
         insert_call = self.mock_cur.execute.call_args_list[0]
         self.assertIn("INSERT INTO topic", insert_call[0][0])
 
     def test_topic_creation_with_new_fields(self):
         """Test that topics are created with new schema fields"""
-        # Mock successful topic creation
-        self.mock_cur.fetchone.side_effect = [None, (3,)]
+        # Mock successful topic creation: INSERT succeeds
+        self.mock_cur.fetchone.return_value = (3,)
 
         result = get_or_create(
             self.mock_cur,
@@ -105,12 +108,13 @@ class TestCurriculumImport(unittest.TestCase):
                 "description": "Test description",
                 "canonical_code": "TEST001",
                 "difficulty_level": 2,
-                "learning_objectives": ["Objective 1", "Objective 2"],
-
+                "learning_objectives": ["Objective 1", "Objective 2"]
             }
         )
 
         self.assertEqual(result, 3)
+        # Verify only INSERT was called
+        self.assertEqual(self.mock_cur.execute.call_count, 1)
         # Verify all new fields are included in INSERT
         insert_call = self.mock_cur.execute.call_args_list[0]
         query = insert_call[0][0]
