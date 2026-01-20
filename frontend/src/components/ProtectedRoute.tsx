@@ -50,9 +50,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // No token → send to correct login
   if (!hasToken) {
+    // When allowParentForProfile is true, prioritize parent login for profile completion
+    const redirectRole = allowParentForProfile && allowedRoles.includes('parent') ? 'parent' : allowedRoles[0];
     return (
       <Navigate
-        to={LOGIN_ROUTE_BY_ROLE[allowedRoles[0]]}
+        to={LOGIN_ROUTE_BY_ROLE[redirectRole]}
         state={{ from: location }}
         replace
       />
