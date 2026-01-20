@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from app.core.config import settings
 
-CSV_PATH = "backend/data/cambridge_curriculum_from_md.csv"
+CSV_PATH = os.path.join(os.path.dirname(__file__), "../data/cambridge_curriculum_from_md.csv")
 CURRICULUM_NAME = "Cambridge"
 CURRICULUM_CODE = "CAM"
 

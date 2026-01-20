@@ -66,7 +66,7 @@ class StudentProfile(Base, SerializerMixin):
     interests = Column(JSON, nullable=True)
     preferred_format = Column(String, nullable=True)
     preferred_session_length = Column(Integer, nullable=True)
-    profile_completed = Column(Boolean, default=False)
+    profile_completed = Column(Boolean, default=False, nullable=False)
 
     # --- Relationships ---
     user = relationship(

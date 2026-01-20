@@ -1,6 +1,6 @@
 """add learning profile fields
 
-Revision ID: manual_add_learning_profile_fields
+Revision ID: e4c91a0f1d23
 Revises: eb17a948b9f7
 Create Date: 2026-01-19 08:10:00.000000
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'manual_add_learning_profile_fields'
+revision = 'e4c91a0f1d23'
 down_revision = 'eb17a948b9f7'
 branch_labels = None
 depends_on = None
@@ -21,7 +21,7 @@ def upgrade() -> None:
     op.add_column('student_profiles', sa.Column('interests', sa.JSON(), nullable=True))
     op.add_column('student_profiles', sa.Column('preferred_format', sa.String(), nullable=True))
     op.add_column('student_profiles', sa.Column('preferred_session_length', sa.Integer(), nullable=True))
-    op.add_column('student_profiles', sa.Column('profile_completed', sa.Boolean(), nullable=True))
+    op.add_column('student_profiles', sa.Column('profile_completed', sa.Boolean(), nullable=False, default=False))
     # ### end Alembic commands ###
 
 

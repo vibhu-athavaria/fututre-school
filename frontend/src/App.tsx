@@ -17,7 +17,7 @@ import { AddChild } from "./pages/AddChild";
 import { EditChild } from "./pages/EditChild";
 
 import { ChildDashboard } from "./pages/ChildDashboard";
-import { CompleteProfile } from "./pages/CompleteProfile";
+import  CompleteProfile  from "./pages/CompleteProfile";
 import { AITutor } from "./pages/AITutor";
 import { Lesson } from "./pages/Lesson";
 import { StudyPlan } from "./pages/StudyPlan";
