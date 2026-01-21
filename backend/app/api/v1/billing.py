@@ -598,6 +598,16 @@ def get_billing_summary_endpoint(
     """Get billing summary for current user"""
     return get_billing_summary(db, current_user.id)
 
+# Subscription Plan Endpoints
+
+@router.get("/subscription-plans", response_model=List[SubscriptionPlanResponse])
+def get_subscription_plans(
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    """Get all active subscription plans"""
+    return get_all_subscription_plans(db)
+
 @router.get("/payment-methods", response_model=List[PaymentMethodResponse])
 def get_payment_methods(
     db: Session = Depends(get_db),

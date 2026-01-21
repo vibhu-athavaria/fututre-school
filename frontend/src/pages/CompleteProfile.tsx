@@ -61,8 +61,11 @@ const CompleteProfile: React.FC = () => {
       const children = JSON.parse(localStorage.getItem('children') || '[]');
       const updatedChildren = children.map((c: any) => c.id === currentChild.id ? updatedChild : c);
       localStorage.setItem('children', JSON.stringify(updatedChildren));
-      navigate('/dashboard');
-    } catch (err: any) {
+      // Navigate to appropriate dashboard based on user role
+      const dashboardRoute = user?.role === 'student' ? '/child-dashboard' : '/dashboard';
+      navigate(dashboardRoute);
+    } catch (err) {
+
       console.error('Failed to save learning profile:', err);
       console.error('Error response:', err.response?.data);
       console.error('Error status:', err.response?.status);

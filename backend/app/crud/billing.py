@@ -519,8 +519,34 @@ def mark_invoice_as_paid(db: Session, invoice_id: int):
 
 # Billing Summary and Helper Functions
 
+def check_trial_status(db: Session, user_id: int) -> dict:
+    """Check if user has active trials and their status"""
+    from datetime import datetime
+
+    subscriptions = get_subscriptions_by_parent(db, user_id)
+    trial_subs = [sub for sub in subscriptions if sub.status == "trial"]
+
+    if not trial_subs:
+        return {"has_trial": False, "trial_expired": False, "days_remaining": 0}
+
+    # Find the latest trial end date
+    trial_end_dates = [sub.trial_end_date for sub in trial_subs if sub.trial_end_date]
+    if not trial_end_dates:
+        return {"has_trial": True, "trial_expired": False, "days_remaining": 0}
+
+    latest_trial_end = max(trial_end_dates)
+    now = datetime.now()
+
+    if latest_trial_end > now:
+        days_remaining = (latest_trial_end - now).days
+        return {"has_trial": True, "trial_expired": False, "days_remaining": days_remaining}
+    else:
+        return {"has_trial": True, "trial_expired": True, "days_remaining": 0}
+
 def get_billing_summary(db: Session, user_id: int):
     """Get a summary of billing information for a user"""
+    from datetime import datetime
+
     subscriptions = get_subscriptions_by_parent(db, user_id)
     payments = get_payments_by_user(db, user_id)
     billing_info = get_billing_info_by_user(db, user_id)
@@ -529,10 +555,27 @@ def get_billing_summary(db: Session, user_id: int):
     trial_subs = [sub for sub in subscriptions if sub.status == "trial"]
     past_due_subs = [sub for sub in subscriptions if sub.status == "past_due"]
 
-    # Calculate total due
-    total_due = 0.0
-    for sub in past_due_subs:
-        total_due += float(sub.price)
+    # Calculate total monthly cost (sum of all active subscription prices)
+    total_monthly_cost = 0.0
+    for sub in active_subs:
+        if sub.status == "active":  # Only count paid subscriptions for monthly cost
+            total_monthly_cost += float(sub.price)
+
+    # Check if user is in free trial
+    in_free_trial = len(trial_subs) > 0
+
+    # Find trial end date and days remaining
+    trial_end_date = None
+    days_remaining_in_trial = 0
+    if trial_subs:
+        # Find the latest trial end date
+        trial_end_dates = [sub.trial_end_date for sub in trial_subs if sub.trial_end_date]
+        if trial_end_dates:
+            trial_end_date = max(trial_end_dates)
+            if trial_end_date > datetime.now():
+                days_remaining_in_trial = (trial_end_date - datetime.now()).days
+            else:
+                days_remaining_in_trial = 0
 
     # Find next payment date
     pending_payments = [p for p in payments if p.status == "pending"]
@@ -541,11 +584,18 @@ def get_billing_summary(db: Session, user_id: int):
         # Find the earliest due payment
         next_payment_date = min(p.payment_date for p in pending_payments if p.payment_date)
 
+    # Check if user has payment methods
+    has_payment_method = len(billing_info) > 0
+
     return {
         "active_subscriptions": len(active_subs),
         "trial_subscriptions": len(trial_subs),
         "past_due_subscriptions": len(past_due_subs),
-        "total_due": total_due,
+        "total_monthly_cost": total_monthly_cost,
         "next_payment_date": next_payment_date,
-        "payment_methods": len(billing_info)
+        "in_free_trial": in_free_trial,
+        "trial_end_date": trial_end_date,
+        "days_remaining_in_trial": days_remaining_in_trial,
+        "payment_methods": len(billing_info),
+        "has_payment_method": has_payment_method
     }

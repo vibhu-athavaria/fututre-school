@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Check, X, ArrowRight, CreditCard, Clock, Users, BookOpen, BarChart2 } from 'lucide-react';
-import { getPricingOptions } from '../services/billingService';
+import { Check, X, ArrowRight, CreditCard, Clock, Users, BookOpen, BarChart2, AlertTriangle } from 'lucide-react';
+import { getSubscriptionPlans } from '../services/billingService';
 
 export const Pricing: React.FC = () => {
   const { user } = useAuth();
@@ -13,14 +13,35 @@ export const Pricing: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
-  // Fetch pricing data from backend
+  // Check if redirected due to trial expiration
+  const urlParams = new URLSearchParams(window.location.search);
+  const trialExpired = urlParams.get('reason') === 'trial_expired';
+
+  // Fetch subscription plans from backend
   useEffect(() => {
     const fetchPricingData = async () => {
       try {
-        const data = await getPricingOptions();
-        setPricingData(data);
+        const plans = await getSubscriptionPlans();
+        // Transform the data to match the expected format
+        const transformedData = {
+          pricing_options: plans.map(plan => ({
+            plan_id: plan.id,
+            name: plan.name,
+            description: plan.description,
+            plan_type: plan.plan_type,
+            trial_days: plan.trial_days,
+            monthly_price: plan.base_price,
+            yearly_price: plan.base_price * 12 * (1 - (plan.yearly_discount / 100)),
+            currency: plan.currency,
+            features: [] // Will be populated from plan features if available
+          })),
+          free_trial_days: plans[0]?.trial_days || 15,
+          available_billing_cycles: ['monthly', 'yearly'],
+          total_subjects_available: 4
+        };
+        setPricingData(transformedData);
       } catch (err) {
-        console.error('Failed to fetch pricing data:', err);
+        console.error('Failed to fetch subscription plans:', err);
         setError('Failed to load pricing information. Using fallback data.');
       } finally {
         setLoading(false);
@@ -149,11 +170,18 @@ export const Pricing: React.FC = () => {
     }
   };
 
-  const handleGetStarted = () => {
+  const handleGetStarted = async (planType: 'basic' | 'premium') => {
     if (!user) {
       navigate('/signup');
-    } else {
+      return;
+    }
+
+    try {
+      // For now, just navigate to billing settings
+      // In a full implementation, this would create a subscription
       navigate('/parent-settings?tab=billing');
+    } catch (error) {
+      console.error('Error starting subscription:', error);
     }
   };
 
@@ -175,6 +203,17 @@ export const Pricing: React.FC = () => {
             No hidden fees. No surprises. Just great learning at an affordable price.
           </p>
         </div>
+
+        {/* Trial Expired Alert */}
+        {trialExpired && (
+          <div className="mb-8 bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-red-800 mb-2">Your Free Trial Has Expired</h2>
+            <p className="text-red-700">
+              To continue accessing Kaihle's learning platform, please choose a subscription plan below.
+            </p>
+          </div>
+        )}
 
         {/* Free Trial Banner */}
         <div className="mb-12">
@@ -245,7 +284,7 @@ export const Pricing: React.FC = () => {
             <button
               onClick={() => {
                 setSelectedPlan('basic');
-                handleGetStarted();
+                handleGetStarted('basic');
               }}
               className={`w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors ${selectedPlan === 'basic' ? 'ring-2 ring-blue-300' : ''}`}
             >
@@ -287,7 +326,7 @@ export const Pricing: React.FC = () => {
             <button
               onClick={() => {
                 setSelectedPlan('standard');
-                handleGetStarted();
+                handleGetStarted('premium'); // Assuming standard is premium
               }}
               className={`w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors ${selectedPlan === 'standard' ? 'ring-2 ring-blue-300' : ''}`}
             >
@@ -323,7 +362,7 @@ export const Pricing: React.FC = () => {
             <button
               onClick={() => {
                 setSelectedPlan('premium');
-                handleGetStarted();
+                handleGetStarted('premium');
               }}
               className={`w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors ${selectedPlan === 'premium' ? 'ring-2 ring-blue-300' : ''}`}
             >

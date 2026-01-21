@@ -146,9 +146,13 @@ class UserBillingSummary(BaseModel):
     active_subscriptions: int = 0
     trial_subscriptions: int = 0
     past_due_subscriptions: int = 0
-    total_due: float = 0.0
+    total_monthly_cost: float = 0.0
     next_payment_date: Optional[datetime] = None
+    in_free_trial: bool = False
+    trial_end_date: Optional[datetime] = None
+    days_remaining_in_trial: int = 0
     payment_methods: int = 0
+    has_payment_method: bool = False
 
 class PaymentMethodResponse(BaseModel):
     id: int
