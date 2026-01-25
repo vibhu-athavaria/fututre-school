@@ -67,6 +67,7 @@ class StudentProfile(Base, SerializerMixin):
     preferred_format = Column(String, nullable=True)
     preferred_session_length = Column(Integer, nullable=True)
     profile_completed = Column(Boolean, default=False, nullable=False)
+    registration_completed_at = Column(DateTime(timezone=True), nullable=True)
 
     # --- Relationships ---
     user = relationship(

@@ -180,6 +180,24 @@ class SubscriptionPlanBase(BaseModel):
 class SubscriptionPlanCreate(SubscriptionPlanBase):
     pass
 
+class TrialExtensionBase(BaseModel):
+    subscription_id: int
+    extended_by_admin_id: int
+    extension_days: int
+    reason: Optional[str] = None
+
+class TrialExtensionCreate(TrialExtensionBase):
+    pass
+
+class TrialExtensionResponse(TrialExtensionBase):
+    id: int
+    original_trial_end: datetime
+    new_trial_end: datetime
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class SubscriptionPlanUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None

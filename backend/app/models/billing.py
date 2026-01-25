@@ -95,7 +95,7 @@ class SubscriptionPlan(Base, SerializerMixin):
     discount_percentage = Column(DECIMAL(5, 2), default=0.00)  # For Premium plan
     currency = Column(String(3), default="USD")
     trial_days = Column(Integer, default=15)
-    yearly_discount = Column(DECIMAL(5, 2), default=10.00)  # 10% discount for yearly
+    yearly_discount = Column(DECIMAL(5, 2), default=20.00)  # 20% discount for yearly
     is_active = Column(Boolean, default=True)
     sort_order = Column(Integer, default=0)
     plan_type = Column(String(20), nullable=False)  # "basic" or "premium"
@@ -158,3 +158,20 @@ class Invoice(Base, SerializerMixin):
     # Relationships
     user = relationship("User", backref="invoices")
     subscription = relationship("Subscription", backref="invoices")
+
+
+class TrialExtension(Base, SerializerMixin):
+    __tablename__ = "trial_extensions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=False)
+    extended_by_admin_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    original_trial_end = Column(DateTime(timezone=True), nullable=False)
+    new_trial_end = Column(DateTime(timezone=True), nullable=False)
+    extension_days = Column(Integer, nullable=False)
+    reason = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    subscription = relationship("Subscription", backref="trial_extensions")
+    admin = relationship("User", foreign_keys=[extended_by_admin_id])

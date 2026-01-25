@@ -21,7 +21,8 @@ from app.crud.billing import (
     delete_subscription_plan, create_plan_feature, get_plan_feature, get_plan_features_by_plan,
     update_plan_feature, delete_plan_feature, create_plan_subject, get_plan_subject,
     get_plan_subjects_by_plan, get_plan_subjects_by_subject, delete_plan_subject,
-    calculate_subscription_price, get_total_subjects_count
+    calculate_subscription_price, get_total_subjects_count, create_trial_extension,
+    get_trial_extensions_by_subscription
 )
 from app.schemas.billing import (
     SubscriptionCreate, SubscriptionUpdate, SubscriptionResponse,
@@ -31,10 +32,13 @@ from app.schemas.billing import (
     SubscriptionWithPayments, UserBillingSummary, PaymentMethodResponse,
     SubscriptionPlanCreate, SubscriptionPlanUpdate, SubscriptionPlanResponse,
     PlanFeatureCreate, PlanFeatureUpdate, PlanFeatureResponse,
-    PlanSubjectCreate, PlanSubjectResponse, PricingCalculationResponse
+    PlanSubjectCreate, PlanSubjectResponse, PricingCalculationResponse,
+    TrialExtensionCreate, TrialExtensionResponse
 )
 from app.models.user import User as UserModel
 from app.schemas.user import User
+from app.services.access_control_service import access_control_service
+from app.services.validation_service import validation_service
 
 router = APIRouter(tags=["billing"])
 
@@ -256,6 +260,62 @@ def start_free_trial_endpoint(
                 )
 
     return start_free_trial(db, current_user.id, student_id, subject_id)
+
+@router.post("/trial-extensions", response_model=TrialExtensionResponse)
+def create_trial_extension_endpoint(
+    trial_extension: TrialExtensionCreate,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    """Extend a student's trial period"""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can extend trials"
+        )
+
+    # Check if subscription exists and is a trial
+    subscription = get_subscription(db, trial_extension.subscription_id)
+    if not subscription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Subscription not found"
+        )
+
+    if subscription.status != "trial":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot extend non-trial subscription"
+        )
+
+    # Create trial extension
+    extension = create_trial_extension(db, trial_extension)
+
+    return extension
+
+@router.get("/trial-extensions/{subscription_id}", response_model=List[TrialExtensionResponse])
+def get_trial_extensions_endpoint(
+    subscription_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    """Get all trial extensions for a subscription"""
+    # Check if user has access to this subscription
+    subscription = get_subscription(db, subscription_id)
+    if not subscription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Subscription not found"
+        )
+
+    if current_user.role != "admin" and subscription.parent_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this subscription's trial extensions"
+        )
+
+    extensions = get_trial_extensions_by_subscription(db, subscription_id)
+    return extensions
 
 # Payment Endpoints
 
@@ -625,11 +685,19 @@ def create_payment_intent(
     plan_id = payment_data.get('plan_id')
     billing_cycle = payment_data.get('billing_cycle', 'monthly')
     student_ids = payment_data.get('student_ids', [])
+    subject_id = payment_data.get('subject_id')
 
     # Get plan details
     plan = get_subscription_plan(db, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
+
+    # Validate subject selection based on plan type
+    if plan.plan_type == "basic" and not subject_id:
+        raise HTTPException(status_code=400, detail="Subject is required for Basic plan")
+
+    if plan.plan_type == "premium" and subject_id:
+        raise HTTPException(status_code=400, detail="Subject should not be specified for Premium plan")
 
     # Calculate price per student
     base_price = calculate_subscription_price(db, plan_id, billing_cycle=billing_cycle)
@@ -644,7 +712,8 @@ def create_payment_intent(
                 'plan_id': plan_id,
                 'billing_cycle': billing_cycle,
                 'user_id': current_user.id,
-                'student_ids': ','.join(map(str, student_ids))
+                'student_ids': ','.join(map(str, student_ids)),
+                'subject_id': str(subject_id) if subject_id else None
             }
         )
 
@@ -664,6 +733,203 @@ def get_billing_summary_endpoint(
     """Get billing summary for current user"""
     return get_billing_summary(db, current_user.id)
 
+@router.get("/access-status/{student_id}", response_model=dict)
+def get_student_access_status(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    """Get access status for a student"""
+    # Check if user has access to this student's data
+    from app.crud.user import get_student_profile
+    student_profile = get_student_profile(db, student_id)
+
+    if not student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student not found"
+        )
+
+    # Parents can only access their own children
+    if current_user.role == "parent" and student_profile.parent_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this student's information"
+        )
+
+    return access_control_service.get_student_access_status(db, student_id)
+
+@router.get("/parent-dashboard-status", response_model=dict)
+def get_parent_dashboard_status(
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    """Get access status for all students of a parent"""
+    if current_user.role != "parent":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only parents can access dashboard status"
+        )
+
+    return access_control_service.get_parent_dashboard_status(db, current_user.id)
+
+@router.get("/access-check/{student_id}", response_model=dict)
+def check_student_access(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    """Check if student has access to courses"""
+    # Check if user has access to this student's data
+    from app.crud.user import get_student_profile
+    student_profile = get_student_profile(db, student_id)
+
+    if not student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student not found"
+        )
+
+    # Parents can only access their own children
+    if current_user.role == "parent" and student_profile.parent_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this student's information"
+        )
+
+    can_access = access_control_service.can_access_courses(db, student_id)
+    notification = access_control_service.get_access_restriction_notification(db, student_id)
+
+    return {
+        "can_access_courses": can_access,
+        "restriction_notification": notification
+    }
+
+# Stripe Webhook Handler
+@router.post("/stripe-webhook")
+async def stripe_webhook(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Handle Stripe webhook events"""
+    import stripe
+    from app.core.config import settings
+
+    payload = await request.body()
+    sig_header = request.headers.get("Stripe-Signature")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except stripe.error.SignatureVerificationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Handle the event
+    if event.type == "payment_intent.succeeded":
+        payment_intent = event.data.object
+        await handle_payment_success(db, payment_intent)
+    elif event.type == "payment_intent.payment_failed":
+        payment_intent = event.data.object
+        await handle_payment_failed(db, payment_intent)
+    elif event.type == "customer.subscription.updated":
+        subscription = event.data.object
+        await handle_subscription_update(db, subscription)
+    elif event.type == "customer.subscription.deleted":
+        subscription = event.data.object
+        await handle_subscription_cancellation(db, subscription)
+
+    return {"status": "success"}
+
+async def handle_payment_success(db: Session, payment_intent: stripe.PaymentIntent):
+    """Handle successful payment"""
+    # Get metadata from payment intent
+    metadata = payment_intent.metadata or {}
+
+    # Create payment record
+    payment_data = PaymentCreate(
+        subscription_id=int(metadata.get('subscription_id', 0)),
+        amount=float(payment_intent.amount / 100),  # Convert from cents
+        currency=payment_intent.currency,
+        payment_method=payment_intent.payment_method or 'credit_card',
+        transaction_id=payment_intent.id,
+        description=f"Payment for subscription {metadata.get('subscription_id', '')}"
+    )
+
+    create_payment(db, payment_data)
+
+    # Update subscription status if this is a new subscription
+    if metadata.get('subscription_id'):
+        subscription = get_subscription(db, int(metadata['subscription_id']))
+        if subscription:
+            subscription.status = "active"
+            subscription.payment_status = "paid"
+            db.commit()
+
+async def handle_payment_failed(db: Session, payment_intent: stripe.PaymentIntent):
+    """Handle failed payment"""
+    # Get metadata from payment intent
+    metadata = payment_intent.metadata or {}
+
+    # Find and update payment record if it exists
+    payments = get_payments_by_subscription(db, int(metadata.get('subscription_id', 0)))
+    for payment in payments:
+        if payment.transaction_id == payment_intent.id:
+            payment.status = "failed"
+            payment.description = f"Payment failed: {payment_intent.last_payment_error.message if payment_intent.last_payment_error else 'Unknown error'}"
+            db.commit()
+            break
+
+    # Update subscription status
+    if metadata.get('subscription_id'):
+        subscription = get_subscription(db, int(metadata['subscription_id']))
+        if subscription:
+            subscription.status = "past_due"
+            subscription.payment_status = "failed"
+            db.commit()
+
+async def handle_subscription_update(db: Session, stripe_subscription: stripe.Subscription):
+    """Handle subscription updates from Stripe"""
+    # Get metadata from subscription
+    metadata = stripe_subscription.metadata or {}
+
+    # Update subscription status in database
+    if metadata.get('subscription_id'):
+        subscription = get_subscription(db, int(metadata['subscription_id']))
+        if subscription:
+            # Map Stripe status to our status
+            status_mapping = {
+                'active': 'active',
+                'canceled': 'canceled',
+                'past_due': 'past_due',
+                'unpaid': 'past_due',
+                'incomplete': 'incomplete',
+                'incomplete_expired': 'expired'
+            }
+
+            stripe_status = stripe_subscription.status
+            db_status = status_mapping.get(stripe_status, 'active')
+
+            subscription.status = db_status
+            subscription.payment_status = 'paid' if stripe_status == 'active' else 'pending'
+            db.commit()
+
+async def handle_subscription_cancellation(db: Session, stripe_subscription: stripe.Subscription):
+    """Handle subscription cancellations from Stripe"""
+    # Get metadata from subscription
+    metadata = stripe_subscription.metadata or {}
+
+    # Update subscription status in database
+    if metadata.get('subscription_id'):
+        subscription = get_subscription(db, int(metadata['subscription_id']))
+        if subscription:
+            subscription.status = "canceled"
+            subscription.end_date = datetime.now()
+            subscription.payment_status = "canceled"
+            db.commit()
+
 # Subscription Plan Endpoints
 
 @router.get("/subscription-plans", response_model=List[SubscriptionPlanResponse])
@@ -672,13 +938,20 @@ def get_subscription_plans(
     current_user: UserModel = Depends(get_current_active_user)
 ):
     """Get all active subscription plans"""
-    from app.constants import DEFAULT_YEARLY_DISCOUNT_PERCENTAGE, PREMIUM_BASE_PRICE
+    from app.constants import BASIC_PLAN_PRICE_PER_SUBJECT, PREMIUM_PLAN_PRICE, DEFAULT_YEARLY_DISCOUNT_PERCENTAGE
+
     plans = get_all_subscription_plans(db)
     for plan in plans:
-        if plan.plan_type == 'premium':
-            plan.base_price = PREMIUM_BASE_PRICE  # Override for premium monthly price
-            discount = Decimal((DEFAULT_YEARLY_DISCOUNT_PERCENTAGE) / 100)
-            plan.yearly_price = Decimal(plan.base_price) * Decimal(12) * (Decimal(1.0) - discount)
+        if plan.plan_type == 'basic':
+            plan.base_price = BASIC_PLAN_PRICE_PER_SUBJECT  # $25 per subject
+            # For yearly pricing, apply 20% discount to annual amount
+            yearly_discount = Decimal(DEFAULT_YEARLY_DISCOUNT_PERCENTAGE / 100)
+            plan.yearly_price = Decimal(plan.base_price) * Decimal(12) * (Decimal(1.0) - yearly_discount)
+        elif plan.plan_type == 'premium':
+            plan.base_price = PREMIUM_PLAN_PRICE  # $80 for all subjects
+            # For yearly pricing, apply 20% discount to annual amount
+            yearly_discount = Decimal(DEFAULT_YEARLY_DISCOUNT_PERCENTAGE / 100)
+            plan.yearly_price = Decimal(plan.base_price) * Decimal(12) * (Decimal(1.0) - yearly_discount)
     return plans
 
 @router.get("/payment-methods", response_model=List[PaymentMethodResponse])

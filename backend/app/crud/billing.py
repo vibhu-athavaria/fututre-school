@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
-from app.models.billing import Subscription, Payment, BillingInfo, Invoice, SubscriptionPlan, PlanFeature, PlanSubject
+from app.models.billing import Subscription, Payment, BillingInfo, Invoice, SubscriptionPlan, PlanFeature, PlanSubject, TrialExtension
 from app.schemas.billing import (
     SubscriptionCreate, SubscriptionUpdate, PaymentCreate, PaymentUpdate,
     BillingInfoCreate, BillingInfoUpdate, InvoiceCreate, InvoiceUpdate,
     SubscriptionPlanCreate, SubscriptionPlanUpdate, PlanFeatureCreate, PlanFeatureUpdate,
-    PlanSubjectCreate
+    PlanSubjectCreate, TrialExtensionCreate
 )
 from app.models.user import User
 from app.constants import DEFAULT_TRIAL_PERIOD_DAYS, DEFAULT_YEARLY_DISCOUNT_PERCENTAGE
@@ -436,29 +436,59 @@ def delete_plan_subject(db: Session, plan_subject_id: int) -> bool:
     db.commit()
     return True
 
+# Trial Extension CRUD operations
+
+def create_trial_extension(db: Session, trial_extension: TrialExtensionCreate):
+    """Create a trial extension record"""
+    db_extension = TrialExtension(
+        subscription_id=trial_extension.subscription_id,
+        extended_by_admin_id=trial_extension.extended_by_admin_id,
+        extension_days=trial_extension.extension_days,
+        reason=trial_extension.reason
+    )
+
+    # Set original and new trial end dates
+    subscription = get_subscription(db, trial_extension.subscription_id)
+    if subscription and subscription.trial_end_date:
+        db_extension.original_trial_end = subscription.trial_end_date
+        db_extension.new_trial_end = subscription.trial_end_date + timedelta(days=trial_extension.extension_days)
+
+        # Update the subscription's trial end date
+        subscription.trial_end_date = db_extension.new_trial_end
+
+    db.add(db_extension)
+    db.commit()
+    db.refresh(db_extension)
+    return db_extension
+
+def get_trial_extensions_by_subscription(db: Session, subscription_id: int):
+    """Get all trial extensions for a subscription"""
+    return db.query(TrialExtension).filter(TrialExtension.subscription_id == subscription_id).all()
+
+def get_trial_extension(db: Session, extension_id: int):
+    """Get a trial extension by ID"""
+    return db.query(TrialExtension).filter(TrialExtension.id == extension_id).first()
+
 # Pricing calculation functions
 
 def calculate_subscription_price(db: Session, plan_id: int, num_subjects: int = 1, billing_cycle: str = "monthly") -> float:
     """Calculate subscription price based on plan and billing cycle"""
+    from app.constants import BASIC_PLAN_PRICE_PER_SUBJECT, PREMIUM_PLAN_PRICE
+
     plan = get_subscription_plan(db, plan_id)
     if not plan:
         return 0.0
 
     if plan.plan_type == "basic":
-        # Basic plan: fixed price per subject
-        base_price = float(plan.base_price) * num_subjects
+        # Basic plan: fixed price per subject ($25 per subject)
+        base_price = BASIC_PLAN_PRICE_PER_SUBJECT * num_subjects
     else:  # premium
-        # Premium plan: calculate total basic price for all subjects, then apply discount
-        # Get total number of available subjects from database
-        from app.models.subject import Subject
-        total_subjects = db.query(Subject).count()
-        total_basic_price = float(plan.base_price) * total_subjects
-        discounted_price = total_basic_price * (1 - (float(plan.discount_percentage) / 100))
-        base_price = discounted_price
+        # Premium plan: fixed price for all subjects ($80)
+        base_price = PREMIUM_PLAN_PRICE
 
-    # Apply yearly discount if applicable
+    # Apply yearly discount if applicable (20%)
     if billing_cycle == "yearly":
-        yearly_discount_factor = 1 - (float(plan.yearly_discount) / 100)
+        yearly_discount_factor = 1 - (20.00 / 100)  # 20% discount
         final_price = base_price * yearly_discount_factor
     else:
         final_price = base_price

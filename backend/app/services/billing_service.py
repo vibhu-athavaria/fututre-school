@@ -7,7 +7,8 @@ from app.crud.billing import (
     start_free_trial, create_payment, mark_payment_as_paid,
     get_billing_info_by_user, get_default_billing_info,
     get_subscription_plan, get_active_subscription_plans, calculate_subscription_price,
-    get_plan_features_by_plan, get_total_subjects_count
+    get_plan_features_by_plan, get_total_subjects_count, create_trial_extension,
+    get_trial_extensions_by_subscription
 )
 from app.crud.user import get_user
 from app.models.user import User
@@ -48,7 +49,8 @@ class BillingService:
 
     def create_monthly_subscription(
         self, db: Session, parent_id: int, student_ids: List[int],
-        plan_id: int, billing_cycle: str = "monthly", payment_method: str = "credit_card"
+        plan_id: int, billing_cycle: str = "monthly", payment_method: str = "credit_card",
+        subject_id: Optional[int] = None
     ) -> List[Any]:
         """Create subscriptions based on selected plan"""
         from app.crud.billing import get_subscription_plan
@@ -57,6 +59,13 @@ class BillingService:
         plan = get_subscription_plan(db, plan_id)
         if not plan:
             raise ValueError("Invalid subscription plan")
+
+        # Validate subject selection based on plan type
+        if plan.plan_type == "basic" and not subject_id:
+            raise ValueError("Subject is required for Basic plan")
+
+        if plan.plan_type == "premium" and subject_id:
+            raise ValueError("Subject should not be specified for Premium plan")
 
         subscriptions = []
 
@@ -74,7 +83,7 @@ class BillingService:
             subscription_data = SubscriptionCreate(
                 parent_id=parent_id,
                 student_id=student_id,
-                subject_id=None,  # Subject selection handled by plan
+                subject_id=subject_id if plan.plan_type == "basic" else None,
                 plan_id=plan_id,
                 billing_cycle=billing_cycle,
                 status="active",
@@ -254,6 +263,19 @@ class BillingService:
             # Get features for this plan
             features = get_plan_features_by_plan(db, plan.id)
 
+            # Get subjects for Basic plans
+            plan_subjects = []
+            if plan.plan_type == "basic":
+                from app.crud.billing import get_plan_subjects_by_plan
+                subjects = get_plan_subjects_by_plan(db, plan.id)
+                for subject_association in subjects:
+                    if subject_association.subject:
+                        plan_subjects.append({
+                            "subject_id": subject_association.subject.id,
+                            "name": subject_association.subject.name,
+                            "description": subject_association.subject.description
+                        })
+
             pricing_options.append({
                 "plan_id": plan.id,
                 "name": plan.name,
@@ -266,14 +288,27 @@ class BillingService:
                 "features": [
                     {"name": feature.feature_name, "description": feature.feature_description}
                     for feature in features
-                ]
+                ],
+                "subjects": plan_subjects if plan.plan_type == "basic" else ["all"]
             })
 
         return {
             "pricing_options": pricing_options,
             "free_trial_days": self.FREE_TRIAL_DAYS,
             "available_billing_cycles": ["monthly", "yearly"],
-            "total_subjects_available": get_total_subjects_count(db)
+            "total_subjects_available": get_total_subjects_count(db),
+            "plan_types": [
+                {
+                    "type": "basic",
+                    "description": "Covers exactly one subject",
+                    "price_description": "$25 USD per month per student per subject"
+                },
+                {
+                    "type": "premium",
+                    "description": "Covers all subjects (Math, Science, English, Humanities)",
+                    "price_description": "$80 USD per month per student"
+                }
+            ]
         }
 
     def validate_free_trial_eligibility(self, db: Session, parent_id: int) -> Dict[str, Any]:
@@ -303,6 +338,115 @@ class BillingService:
             "reason": "Eligible for free trial",
             "trial_days": self.FREE_TRIAL_DAYS,
             "trial_end_date": (datetime.now() + timedelta(days=self.FREE_TRIAL_DAYS)).strftime("%Y-%m-%d")
+        }
+
+    def extend_trial(
+        self, db: Session, subscription_id: int, admin_id: int,
+        extension_days: int, reason: str = None
+    ):
+        """Extend a student's trial period"""
+        from app.crud.billing import get_subscription
+
+        subscription = get_subscription(db, subscription_id)
+
+        if not subscription:
+            raise ValueError("Subscription not found")
+
+        if subscription.status != "trial":
+            raise ValueError("Cannot extend non-trial subscription")
+
+        if not subscription.trial_end_date:
+            raise ValueError("Subscription has no trial end date")
+
+        # Create trial extension record
+        trial_extension_data = TrialExtensionCreate(
+            subscription_id=subscription_id,
+            extended_by_admin_id=admin_id,
+            extension_days=extension_days,
+            reason=reason
+        )
+
+        extension = create_trial_extension(db, trial_extension_data)
+
+        return {
+            "success": True,
+            "subscription_id": subscription_id,
+            "old_trial_end": extension.original_trial_end,
+            "new_trial_end": extension.new_trial_end,
+            "extension_days": extension_days,
+            "extension_id": extension.id
+        }
+
+    def get_trial_extensions(self, db: Session, subscription_id: int):
+        """Get all trial extensions for a subscription"""
+        extensions = get_trial_extensions_by_subscription(db, subscription_id)
+
+        return [{
+            "id": ext.id,
+            "subscription_id": ext.subscription_id,
+            "extended_by_admin_id": ext.extended_by_admin_id,
+            "original_trial_end": ext.original_trial_end,
+            "new_trial_end": ext.new_trial_end,
+            "extension_days": ext.extension_days,
+            "reason": ext.reason,
+            "created_at": ext.created_at
+        } for ext in extensions]
+
+    def start_trial_for_student(
+        self, db: Session, student_id: int,
+        plan_id: int = None, subject_id: int = None
+    ):
+        """Start a trial for a student when they complete registration"""
+        from app.crud.user import get_student_profile
+        from app.crud.billing import get_subscription_plan
+
+        # Get student profile
+        student_profile = get_student_profile(db, student_id)
+        if not student_profile:
+            raise ValueError("Student profile not found")
+
+        if not student_profile.registration_completed_at:
+            raise ValueError("Student registration not completed")
+
+        # Get parent ID
+        parent_id = student_profile.parent_id
+
+        # Check if student already has a trial
+        existing_trials = get_subscriptions_by_parent(db, parent_id)
+        existing_trials = [sub for sub in existing_trials if sub.student_id == student_id and sub.status == "trial"]
+
+        if existing_trials:
+            return {"success": False, "reason": "Student already has an active trial"}
+
+        # Get default trial duration
+        trial_duration = self.FREE_TRIAL_DAYS
+        if plan_id:
+            plan = get_subscription_plan(db, plan_id)
+            if plan:
+                trial_duration = plan.trial_days
+
+        # Calculate trial end date
+        trial_end_at = student_profile.registration_completed_at + timedelta(days=trial_duration)
+
+        # Create trial subscription
+        subscription_data = SubscriptionCreate(
+            parent_id=parent_id,
+            student_id=student_id,
+            subject_id=subject_id,
+            status="trial",
+            price=0.00,  # Trial is free
+            trial_end_date=trial_end_at
+        )
+
+        trial_subscription = create_subscription(db, subscription_data, parent_id)
+
+        return {
+            "success": True,
+            "subscription_id": trial_subscription.id,
+            "student_id": student_id,
+            "parent_id": parent_id,
+            "trial_end_date": trial_end_at,
+            "status": "trial"
         }
 
 # Singleton instance for easy access
