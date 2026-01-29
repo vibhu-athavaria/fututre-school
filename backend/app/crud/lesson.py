@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from app.models.lesson import Lesson, StudyPlan, StudyPlanLesson
+from backend.app.models.study_plan import Lesson, StudyPlan, StudyPlanLesson
 from app.schemas.lesson import LessonCreate, LessonUpdate, StudyPlanCreate, StudyPlanUpdate, StudyPlanLessonCreate
 from typing import Optional, List
 
@@ -10,12 +10,12 @@ def get_lesson(db: Session, lesson_id: int) -> Optional[Lesson]:
 
 def get_lessons(db: Session, skip: int = 0, limit: int = 100, subject: Optional[str] = None, difficulty: Optional[str] = None) -> List[Lesson]:
     query = db.query(Lesson).filter(Lesson.is_active == True)
-    
+
     if subject:
         query = query.filter(Lesson.subject == subject)
     if difficulty:
         query = query.filter(Lesson.difficulty_level == difficulty)
-    
+
     return query.offset(skip).limit(limit).all()
 
 def create_lesson(db: Session, lesson: LessonCreate) -> Lesson:
@@ -29,11 +29,11 @@ def update_lesson(db: Session, lesson_id: int, lesson_update: LessonUpdate) -> O
     db_lesson = get_lesson(db, lesson_id)
     if not db_lesson:
         return None
-    
+
     update_data = lesson_update.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_lesson, field, value)
-    
+
     db.commit()
     db.refresh(db_lesson)
     return db_lesson
@@ -42,7 +42,7 @@ def delete_lesson(db: Session, lesson_id: int) -> bool:
     db_lesson = get_lesson(db, lesson_id)
     if not db_lesson:
         return False
-    
+
     # Soft delete by setting is_active to False
     db_lesson.is_active = False
     db.commit()
@@ -65,7 +65,7 @@ def create_study_plan(db: Session, study_plan: StudyPlanCreate) -> StudyPlan:
     db.add(db_study_plan)
     db.commit()
     db.refresh(db_study_plan)
-    
+
     # Add lessons to the study plan
     for index, lesson_id in enumerate(study_plan.lesson_ids):
         study_plan_lesson = StudyPlanLesson(
@@ -74,7 +74,7 @@ def create_study_plan(db: Session, study_plan: StudyPlanCreate) -> StudyPlan:
             order_index=index
         )
         db.add(study_plan_lesson)
-    
+
     db.commit()
     db.refresh(db_study_plan)
     return db_study_plan
@@ -83,11 +83,11 @@ def update_study_plan(db: Session, study_plan_id: int, study_plan_update: StudyP
     db_study_plan = get_study_plan(db, study_plan_id)
     if not db_study_plan:
         return None
-    
+
     update_data = study_plan_update.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_study_plan, field, value)
-    
+
     db.commit()
     db.refresh(db_study_plan)
     return db_study_plan
@@ -98,15 +98,15 @@ def add_lesson_to_study_plan(db: Session, study_plan_id: int, lesson_id: int) ->
         StudyPlanLesson.study_plan_id == study_plan_id,
         StudyPlanLesson.lesson_id == lesson_id
     ).first()
-    
+
     if existing:
         return existing
-    
+
     # Get the next order index
     max_order = db.query(StudyPlanLesson).filter(
         StudyPlanLesson.study_plan_id == study_plan_id
     ).count()
-    
+
     study_plan_lesson = StudyPlanLesson(
         study_plan_id=study_plan_id,
         lesson_id=lesson_id,
@@ -122,10 +122,10 @@ def remove_lesson_from_study_plan(db: Session, study_plan_id: int, lesson_id: in
         StudyPlanLesson.study_plan_id == study_plan_id,
         StudyPlanLesson.lesson_id == lesson_id
     ).first()
-    
+
     if not study_plan_lesson:
         return False
-    
+
     db.delete(study_plan_lesson)
     db.commit()
     return True
@@ -135,10 +135,10 @@ def mark_lesson_completed(db: Session, study_plan_id: int, lesson_id: int) -> Op
         StudyPlanLesson.study_plan_id == study_plan_id,
         StudyPlanLesson.lesson_id == lesson_id
     ).first()
-    
+
     if not study_plan_lesson:
         return None
-    
+
     study_plan_lesson.is_completed = True
     study_plan_lesson.completed_at = datetime.utcnow()
     db.commit()
@@ -149,14 +149,14 @@ def get_study_plan_progress(db: Session, study_plan_id: int) -> dict:
     total_lessons = db.query(StudyPlanLesson).filter(
         StudyPlanLesson.study_plan_id == study_plan_id
     ).count()
-    
+
     completed_lessons = db.query(StudyPlanLesson).filter(
         StudyPlanLesson.study_plan_id == study_plan_id,
         StudyPlanLesson.is_completed == True
     ).count()
-    
+
     progress_percentage = (completed_lessons / total_lessons * 100) if total_lessons > 0 else 0
-    
+
     return {
         "total_lessons": total_lessons,
         "completed_lessons": completed_lessons,

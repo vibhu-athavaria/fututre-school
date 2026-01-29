@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+from backend.app.models import study_plan
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
@@ -10,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.database import Base
 from app.models import (
-    user, progress, lesson, community, assessment, ai_tutor, billing, course,
+    user, progress, community, assessment, ai_tutor, billing, course,
     subject, curriculum, curriculum_mapping
     )
 
