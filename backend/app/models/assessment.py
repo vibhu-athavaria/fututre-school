@@ -69,7 +69,7 @@ class QuestionBank(Base):
     correct_answer = Column(Text, nullable=False)
     difficulty_level = Column(Float, default=0.5)  # 0.0-1.0 scale
     canonical_form = Column(Text, nullable=False)
-    problem_signature = Column(JSON, nullable=False)
+    problem_signature = Column(JSONB, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

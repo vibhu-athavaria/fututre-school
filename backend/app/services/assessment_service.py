@@ -440,7 +440,7 @@ def find_duplicates_question(
             text("""
                 SELECT id
                 FROM question_bank
-                WHERE problem_signature = CAST(:sig AS json)
+                WHERE problem_signature = CAST(:sig AS jsonb)
                 LIMIT 1
             """),
             {"sig": json.dumps(problem_signature)}

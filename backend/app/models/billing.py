@@ -105,7 +105,7 @@ class SubscriptionPlan(Base, SerializerMixin):
 
     # For Basic plan: which subject is included
     # For Premium plan: this will be ignored (all subjects included)
-    subjects = relationship("PlanSubject", back_populates="plan")
+    # subjects = relationship("PlanSubject", back_populates="plan")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -130,11 +130,11 @@ class PlanSubject(Base, SerializerMixin):
 
     id = Column(Integer, primary_key=True, index=True)
     plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=False)
-    subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=False)
+    # subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=False)
 
     # Relationships
-    plan = relationship("SubscriptionPlan", back_populates="subjects")
-    subject = relationship("Subject")
+    # plan = relationship("SubscriptionPlan", back_populates="subjects")
+    # subject = relationship("Subject")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

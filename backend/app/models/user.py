@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import JSONB
 from app.core.database import Base
 import enum
 from app.crud.mixin import SerializerMixin
@@ -8,6 +9,8 @@ from app.crud.mixin import SerializerMixin
 class UserRole(str, enum.Enum):
     PARENT = "parent"
     STUDENT = "student"
+    TEACHER = "teacher"
+    SCHOOL_ADMIN = "school_admin"
     ADMIN = "admin"
 
 
@@ -20,9 +23,9 @@ class User(Base, SerializerMixin):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=False)
     role = Column(Enum(UserRole), nullable=False)
+    personality = Column(JSONB, nullable=False)
     has_completed_assessment = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
-    parent_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -66,6 +69,7 @@ class StudentProfile(Base, SerializerMixin):
     interests = Column(JSON, nullable=True)
     preferred_format = Column(String, nullable=True)
     preferred_session_length = Column(Integer, nullable=True)
+
     registration_completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

@@ -58,31 +58,12 @@ const AssessmentPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("access_token")
-      const localUser = localStorage.getItem("user")
-
-      // No token or localUser → force login
-      if (!token || !localUser) {
-        console.error("Missing token or user. Redirecting.")
-        window.location.href = "/student-login"
-        return
+      const user = localStorage.getItem("user");
+      if (!user) {
+        navigate("/login");
+        return;
       }
-      // Parse user and check role
-      let parsedUser: any
-      try {
-        parsedUser = JSON.parse(localUser)
-
-        if (!parsedUser?.role || parsedUser.role.toLowerCase() !== "student") {
-          console.error("User is not a student")
-          window.location.href = "/student-login"
-          return
-        }
-      } catch (err) {
-        console.error("Invalid user JSON")
-        window.location.href = "/student-login"
-        return
-      }
-
+      const parsedUser = JSON.parse(user);
       //  create or get assessment
       const resp = await http.post(
         "/api/v1/assessments/",
