@@ -12,7 +12,7 @@ class MicroCourse(Base, SerializerMixin):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
 
-    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    subject_id = Column(Integer, ForeignKey("subject.id", ondelete="CASCADE"), nullable=False)
     # grade_id = Column(Integer, ForeignKey("grades.id", ondelete="CASCADE"), nullable=False)
     # topic_id = Column(Integer, ForeignKey("topics.id", ondelete="SET NULL"))
     # subtopic_id = Column(Integer, ForeignKey("subtopics.id", ondelete="SET NULL"))

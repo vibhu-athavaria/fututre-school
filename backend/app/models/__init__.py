@@ -8,4 +8,5 @@ from .subject import Subject
 from .course import MicroCourse, MicroCourseSection, MicroCourseQuestionLink
 from .ai_tutor import TutorSession, TutorInteraction, StudentAnswer
 from .community import Post, Comment, Notification
+from .curriculum import Curriculum, Topic, Subtopic, CurriculumTopic, TopicPrerequisite
 # Add other model imports as needed

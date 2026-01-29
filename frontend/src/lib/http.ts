@@ -4,7 +4,7 @@ import { getAuthHeader } from "./authToken";
 
 export const http = axios.create({
   baseURL: config.backendUrl,
-  timeout: 15000,
+  timeout: 60000,
   headers: {
     "Content-Type": "application/json",
   },

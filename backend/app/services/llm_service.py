@@ -26,25 +26,25 @@ class LLMService:
         Returns None if parsing fails after cleanup.
         """
         try:
-            # 1️⃣ Remove Markdown formatting (```json ... ```)
+            # Remove Markdown formatting (```json ... ```)
             cleaned = re.sub(r"^```(?:json)?|```$", "", raw_text.strip(), flags=re.MULTILINE).strip()
 
-            # 2️⃣ Normalize Unicode (remove invisible / weird chars)
+            # Normalize Unicode (remove invisible / weird chars)
             cleaned = unicodedata.normalize("NFKD", cleaned)
             cleaned = re.sub(r"[^\x00-\x7F]+", " ", cleaned)  # keep ASCII only
 
-            # 3️⃣ Remove stray characters after closing brackets
+            # Remove stray characters after closing brackets
             cleaned = re.sub(r']\s*[^,\]}]*', ']', cleaned)
             cleaned = re.sub(r'}\s*[^}]*$', '}', cleaned)
 
-            # 4️⃣ Fix trailing commas
+            # Fix trailing commas
             cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
 
-            # 5️⃣ Parse JSON
+            # Parse JSON
             return json.loads(cleaned)
 
         except Exception as e:
-            print("⚠️ Could not parse Gemini JSON directly. Raw text:")
+            print("Could not parse Gemini JSON directly. Raw text:")
             print(raw_text)
             print(f"Parser error: {e}")
             return None
